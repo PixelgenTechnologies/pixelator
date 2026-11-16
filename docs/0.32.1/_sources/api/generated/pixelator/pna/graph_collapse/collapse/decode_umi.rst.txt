@@ -1,0 +1,12 @@
+pixelator.pna.graph_collapse.collapse.decode_umi
+================================================
+
+.. py:function:: pixelator.pna.graph_collapse.collapse.decode_umi(value: int, length: int) -> bytes
+
+   Decode a 2-bit-packed UMI integer into its nucleotide sequence.
+
+   :param value: The packed UMI value, as stored in an edgelist's ``umi1``/``umi2`` column.
+   :param length: The number of nucleotides the UMI was packed from.
+
+   :returns: The decoded nucleotide sequence.
+

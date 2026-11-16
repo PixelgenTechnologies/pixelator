@@ -1,0 +1,24 @@
+pixelator.pna.analysis.denoise.denoise_one_core_layer
+=====================================================
+
+.. py:function:: pixelator.pna.analysis.denoise.denoise_one_core_layer(component: pixelator.pna.graph.PNAGraph, pval_significance_threshold: float = 0.05, inflate_factor: float = 1.5, one_core_ratio_threshold: float = 0.9) -> list
+
+   Identify markers over-expressed in the one-core layer and sample nodes to remove.
+
+   This function analyzes the one-core layer of a graph, identifies markers
+   that are over-expressed using a statistical significance threshold, and
+   samples nodes associated with those markers for removal (bleed-over candidates).
+
+   :param component: The graph component to process, containing node marker counts and raw graph data.
+   :param pval_significance_threshold: The p-value threshold for determining marker overexpression
+                                       significance. Defaults to 0.05.
+   :param inflate_factor: A factor used for inflating certain calculations (not explicitly used in the
+                          provided code). Defaults to 1.5.
+   :param one_core_ratio_threshold: Components with higher nodes in their one-core layer are not
+                                    denoised.
+
+   :returns: Node ids sampled for removal from the one-core layer (bleed-over candidates). Does not
+             include stranded nodes; callers merge with other denoise steps and then call
+             ``get_stranded_nodes`` once on the combined set.
+   :rtype: list
+

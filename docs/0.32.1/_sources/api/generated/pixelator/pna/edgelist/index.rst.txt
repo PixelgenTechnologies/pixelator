@@ -1,0 +1,41 @@
+pixelator.pna.edgelist
+======================
+
+.. py:module:: pixelator.pna.edgelist
+
+.. autoapi-nested-parse::
+
+   Entrypoint for the native edgelist module.
+
+   The stage itself lives in Rust and is driven through
+   `pixelator_core.run_edgelist`; this package holds the Python-side
+   reporting that turns the statistics it returns into a sample report.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/pna/edgelist/report/index
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/edgelist/EdgelistSampleReport
+   /api/generated/pixelator/pna/edgelist/Q30Statistics
+
+.. autoapisummary::
+
+   pixelator.pna.edgelist.EdgelistSampleReport
+   pixelator.pna.edgelist.Q30Statistics
+
+

@@ -1,0 +1,7 @@
+pixelator.pna.utils.utils.normalize_input_to_list
+=================================================
+
+.. py:function:: pixelator.pna.utils.utils.normalize_input_to_list(one_or_more_values: Iterable[str] | str | None) -> list[str] | None
+
+   Normalize input to a list of strings.
+

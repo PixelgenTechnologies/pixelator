@@ -1,0 +1,28 @@
+pixelator.testing.pixelfile
+===========================
+
+.. py:module:: pixelator.testing.pixelfile
+
+.. autoapi-nested-parse::
+
+   PNA pxl file generation from populated cell edge lists.
+
+   Copyright © 2022 Pixelgen Technologies AB.
+
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/testing/pixelfile/with_legacy_panel_columns
+   /api/generated/pixelator/testing/pixelfile/write_pna_pxl
+
+.. autoapisummary::
+
+   pixelator.testing.pixelfile.with_legacy_panel_columns
+   pixelator.testing.pixelfile.write_pna_pxl
+
+

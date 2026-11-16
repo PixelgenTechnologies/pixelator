@@ -1,0 +1,7 @@
+pixelator.pna.anndata.calculate_antibody_metrics
+================================================
+
+.. py:function:: pixelator.pna.anndata.calculate_antibody_metrics(counts_df)
+
+   Calculate antibody metrics from a count matrix, can be used to set/update adata.vars.
+

@@ -1,0 +1,13 @@
+pixelator.pna.graph.component_recovery_utils.filter_components_by_size_hard_thresholds
+======================================================================================
+
+.. py:function:: pixelator.pna.graph.component_recovery_utils.filter_components_by_size_hard_thresholds(component_sizes: polars.DataFrame, lower_bound: int | None, higher_bound: int | None) -> polars.Series
+
+   Filter components by size using hard thresholds.
+
+   :param component_sizes: DataFrame with columns `component` and `n_umi`.
+   :param lower_bound: The lower bound for the component size.
+   :param higher_bound: The higher bound for the component size.
+
+   :returns: The `component` column for components that pass the filter.
+

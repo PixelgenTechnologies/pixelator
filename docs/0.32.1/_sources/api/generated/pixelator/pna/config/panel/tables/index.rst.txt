@@ -1,0 +1,52 @@
+pixelator.pna.config.panel.tables
+=================================
+
+.. py:module:: pixelator.pna.config.panel.tables
+
+.. autoapi-nested-parse::
+
+   DuckDB storage for panel markers and their sources.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.config.panel.tables.PANEL_STORAGE_COLUMNS
+   pixelator.pna.config.panel.tables.PANEL_TABLES
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/config/panel/tables/has_panel_tables
+   /api/generated/pixelator/pna/config/panel/tables/panel_tables_present
+   /api/generated/pixelator/pna/config/panel/tables/read_panel_table_frames
+   /api/generated/pixelator/pna/config/panel/tables/stored_panel_marker_columns
+   /api/generated/pixelator/pna/config/panel/tables/write_panel_tables
+
+.. autoapisummary::
+
+   pixelator.pna.config.panel.tables.has_panel_tables
+   pixelator.pna.config.panel.tables.panel_tables_present
+   pixelator.pna.config.panel.tables.read_panel_table_frames
+   pixelator.pna.config.panel.tables.stored_panel_marker_columns
+   pixelator.pna.config.panel.tables.write_panel_tables
+
+
+Module Contents
+---------------
+
+.. py:data:: PANEL_STORAGE_COLUMNS
+
+.. py:data:: PANEL_TABLES
+   :value: ('panels', 'panel_sources')
+
+

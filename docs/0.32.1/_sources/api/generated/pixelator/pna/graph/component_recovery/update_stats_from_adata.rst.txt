@@ -1,0 +1,7 @@
+pixelator.pna.graph.component_recovery.update_stats_from_adata
+==============================================================
+
+.. py:function:: pixelator.pna.graph.component_recovery.update_stats_from_adata(adata: anndata.AnnData, stats: pixelator.pna.graph.report.GraphStatistics) -> pixelator.pna.graph.report.GraphStatistics
+
+   Update GraphStatistics from an AnnData object.
+

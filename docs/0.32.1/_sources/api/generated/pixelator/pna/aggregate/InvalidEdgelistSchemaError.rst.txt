@@ -1,0 +1,10 @@
+pixelator.pna.aggregate.InvalidEdgelistSchemaError
+==================================================
+
+.. py:exception:: pixelator.pna.aggregate.InvalidEdgelistSchemaError
+
+   Bases: :py:obj:`ValueError`
+
+
+   Raised when an input parquet does not have the edgelist schema.
+

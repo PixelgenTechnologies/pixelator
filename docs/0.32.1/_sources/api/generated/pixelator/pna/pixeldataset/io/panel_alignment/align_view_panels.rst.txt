@@ -1,0 +1,20 @@
+pixelator.pna.pixeldataset.io.panel_alignment.align_view_panels
+===============================================================
+
+.. py:function:: pixelator.pna.pixeldataset.io.panel_alignment.align_view_panels(pxl_files: Mapping[str, pixelator.pna.pixeldataset.io.pxl_file.PxlFile], force: bool = False) -> ViewAlignment
+
+   Align the panels of the files of a view.
+
+   Nothing is aligned when there is a single file, when the panel of a file is
+   missing or cannot be read, or when the panels cannot be aligned. The last
+   two cases are logged as warnings. Conflicting markers are not one of them:
+   they raise, as the data of the files cannot be combined safely.
+
+   :param pxl_files: The files of a view, by sample name.
+   :param force: Log conflicting markers as a warning instead of raising.
+
+   :returns: The alignment, empty when nothing was aligned.
+
+   :raises PanelConflictError: When the panels have conflicting markers and
+       ``force`` is not set.
+

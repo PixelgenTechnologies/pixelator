@@ -1,0 +1,30 @@
+pixelator.pna.analysis.permute
+==============================
+
+.. py:module:: pixelator.pna.analysis.permute
+
+.. autoapi-nested-parse::
+
+   Module with functions for created permuted data.
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/analysis/permute/edgelist_permutations
+   /api/generated/pixelator/pna/analysis/permute/permute_edgelist
+   /api/generated/pixelator/pna/analysis/permute/permute_node_markers
+
+.. autoapisummary::
+
+   pixelator.pna.analysis.permute.edgelist_permutations
+   pixelator.pna.analysis.permute.permute_edgelist
+   pixelator.pna.analysis.permute.permute_node_markers
+
+

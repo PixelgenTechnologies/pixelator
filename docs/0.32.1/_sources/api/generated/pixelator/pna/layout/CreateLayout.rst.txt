@@ -1,0 +1,94 @@
+pixelator.pna.layout.CreateLayout
+=================================
+
+.. py:class:: pixelator.pna.layout.CreateLayout(layout_algorithms: list[pixelator.common.graph.backends.protocol.SupportedLayoutAlgorithm], algorithm_kwargs: dict | None = None)
+
+   Bases: :py:obj:`pixelator.pna.analysis_engine.PerComponentTask`
+
+
+   Run one or more layout algorithms on a component.
+
+
+   .. py:attribute:: TASK_NAME
+      :value: 'layout'
+
+
+
+   .. py:method:: add_to_pixel_file(data: list[str], pxl_file_target: pixelator.pna.pixeldataset.io.PxlFile) -> None
+
+      Add the data in the right place in the pxl_dataset.
+
+
+
+   .. py:method:: concatenate_data(data: Iterable[str]) -> list[str]
+
+      Concatenate the data. Override this if you need custom concatenation behavior.
+
+
+
+   .. py:method:: get_work_folder() -> pathlib.Path | None
+
+      Get the work folder used for temporary files during analysis.
+
+
+
+   .. py:attribute:: pxl_dataset
+      :type:  pixelator.pna.pixeldataset.PNAPixelDataset | None
+      :value: None
+
+
+
+   .. py:method:: run_from_component_id(component_id: str)
+
+      Run the layout on a component specified by its ID.
+
+      This only works when the pxl_dataset is set so that components
+      are directly accessible through their IDs.
+
+      :param component_id: The id of the component.
+
+      :returns: a LazyFrame containing the layout data.
+
+
+
+   .. py:method:: run_on_component_edgelist(component: pyarrow.RecordBatch | polars.LazyFrame, component_id: str) -> list[str]
+
+      Run the layout on a component.
+
+      :param component: The component to run the analysis on. Either a Graph or a LazyFrame.
+      :param component_id: The id of the component.
+
+      :returns: Name of the parquet file containing the layout data.
+
+
+
+   .. py:method:: run_on_component_graph(component: pixelator.pna.graph.PNAGraph, component_id: str) -> list[str]
+
+      Run the layout on a component.
+
+      :param component: The component graph to run the analysis on.
+      :param component_id: The id of the component.
+
+      :returns: Name of the parquet file containing the layout data.
+
+      :raises TypeError: If the component is not a Graph or a LazyFrame.
+
+
+
+   .. py:method:: set_dataset(pxl_file_path: pathlib.Path)
+
+      Specify a dataset to enable analysis being run directly from component IDs.
+
+
+
+   .. py:method:: setup() -> None
+
+      Setup the analysis before running on any components.
+
+
+
+   .. py:method:: teardown() -> None
+
+      Teardown the analysis after running on all components.
+
+

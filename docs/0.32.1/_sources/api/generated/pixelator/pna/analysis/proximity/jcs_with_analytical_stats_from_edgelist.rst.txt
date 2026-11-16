@@ -1,0 +1,20 @@
+pixelator.pna.analysis.proximity.jcs_with_analytical_stats_from_edgelist
+========================================================================
+
+.. py:function:: pixelator.pna.analysis.proximity.jcs_with_analytical_stats_from_edgelist(edgelist: polars.DataFrame, min_marker_count: int = 0, min_std: float = DEFAULT_MIN_STD) -> pandas.DataFrame
+
+   Compute join counts augmented with analytically calculated expected statistics.
+
+   The expected join counts and their standard deviations are calculated
+   exactly under the null model where the markers of the umi1 and umi2 nodes are
+   independently permuted within a component (see `jcs_with_analytical_stats`).
+
+   :param edgelist: A DataFrame representing the edgelist of a single component.
+   :param min_marker_count: Minimum marker count to consider. Defaults to 0.
+   :param min_std: Minimum standard deviation to use when calculating the z-scores.
+                   Defaults to 1.0.
+
+   :returns: A DataFrame with one row per marker pair containing the columns `marker_1`,
+             `marker_2`, `join_count`, `join_count_expected_mean`,
+             `join_count_expected_sd`, `join_count_z` and `join_count_p`.
+

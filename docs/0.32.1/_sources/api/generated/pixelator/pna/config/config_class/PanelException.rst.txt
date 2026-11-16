@@ -1,0 +1,10 @@
+pixelator.pna.config.config_class.PanelException
+================================================
+
+.. py:exception:: pixelator.pna.config.config_class.PanelException
+
+   Bases: :py:obj:`pixelator.common.exceptions.PixelatorBaseException`
+
+
+   Exception raised for failures to load a panel into the global configuration.
+

@@ -1,0 +1,60 @@
+pixelator.pna.amplicon.build_amplicon.AmpliconBuilder
+=====================================================
+
+.. py:class:: pixelator.pna.amplicon.build_amplicon.AmpliconBuilder(assay: pixelator.pna.config.assay.PNAAssay, mismatches: int | float = 0.2, writer=None)
+
+   Bases: :py:obj:`pixelator.pna.read_processing.modifiers.CombiningModifier`, :py:obj:`cutadapt.steps.HasFilterStatistics`, :py:obj:`pixelator.pna.read_processing.statistics.HasCustomStatistics`
+
+
+   Construct an amplicon from a pair of reads.
+
+   :param assay: the assay design
+   :param mismatches: the maximum number of mismatches allowed when aligning the LBS sequences
+   :param writer: a writer to save failed reads to
+
+
+   .. py:method:: descriptive_identifier() -> str
+
+      Return a descriptive identifier for reporting.
+
+      See `HasFilterStatistics`.
+
+
+
+   .. py:method:: filtered() -> int
+
+      Return the number of reads that have been filtered by this stage.
+
+
+
+   .. py:method:: get_statistics() -> AmpliconBuilderStatistics
+
+      Return the statistics for the amplicon builder.
+
+      See `HasCustomStatistics`.
+
+
+
+   .. py:method:: get_statistics_name()
+
+      Return a descriptive identifier for detailed statistics.
+
+      See `HasCustomStatistics`.
+
+
+
+   .. py:method:: handle(read1, read2, info1, info2)
+      :abstractmethod:
+
+
+      Handle the reads and their modification info.
+
+      This method is a placeholder for any additional processing that might be needed
+      before building the amplicon.
+
+      :param read1: Forward read (or None).
+      :param read2: Reverse read (or None).
+      :param info1: Modification info for the forward read (unused).
+      :param info2: Modification info for the reverse read (unused).
+
+

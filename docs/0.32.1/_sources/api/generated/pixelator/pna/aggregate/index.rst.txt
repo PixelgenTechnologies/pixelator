@@ -1,0 +1,63 @@
+pixelator.pna.aggregate
+=======================
+
+.. py:module:: pixelator.pna.aggregate
+
+.. autoapi-nested-parse::
+
+   Collapse per-read edgelist parquet files into unique molecules.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/pna/aggregate/report/index
+
+
+Exceptions
+----------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/aggregate/InvalidEdgelistSchemaError
+
+.. autoapisummary::
+
+   pixelator.pna.aggregate.InvalidEdgelistSchemaError
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/aggregate/AggregateStats
+
+.. autoapisummary::
+
+   pixelator.pna.aggregate.AggregateStats
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/aggregate/aggregate_edgelist
+   /api/generated/pixelator/pna/aggregate/init_duckdb_conn
+
+.. autoapisummary::
+
+   pixelator.pna.aggregate.aggregate_edgelist
+   pixelator.pna.aggregate.init_duckdb_conn
+
+

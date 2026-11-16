@@ -1,0 +1,65 @@
+pixelator.pna.collapse.independent.collapser.RegionCollapser
+============================================================
+
+.. py:class:: pixelator.pna.collapse.independent.collapser.RegionCollapser(assay: pixelator.pna.config.PNAAssay, panel: pixelator.pna.config.PNAAntibodyPanel, region_id: CollapsibleRegion, max_mismatches: int | float = 0.1, algorithm: pixelator.pna.collapse.utilities.MoleculeCollapserAlgorithm = 'directional', threads: int = -1, logger: logging.Logger | None = None, min_parallel_chunk_size: int = 500, similarity_backend: Literal['faiss'] = 'faiss')
+
+   Error correct UMI sequences based on similarity.
+
+   :ivar _umi1_data: A numpy array containing the unique UMI-1 sequences for the current processing
+                     batch.
+                     These are recoded to a 2-bit encoding and cast to a 64-bit integer.
+   :ivar _umi2_data: A numpy array containing the unique UMI-2 sequences for the current processing
+                     batch.
+                     These are recoded to a 2-bit encoding and cast to a 64-bit integer.
+
+   :ivar _db_to_molecule_idx: A numpy array containing for each of the input moleces the index of the
+                              unique UMI.
+                              This is used to link corrections of the unique umis back to all molecules that share the
+                              same UMI.
+   :ivar _unique_umi_to_molecule_count: The number of molecules that map to each unique umi.
+                                        This is used to map "unique umi" counts to the corresponding "molecule" counts.
+
+
+
+   .. py:attribute:: algorithm
+      :value: 'directional'
+
+
+
+   .. py:attribute:: assay
+
+
+   .. py:property:: max_hamming_mismatches
+      :type: int
+
+
+      Return the maximum hamming distance for the number of allowed mismatches.
+
+
+   .. py:attribute:: min_parallel_chunk_size
+      :value: 500
+
+
+
+   .. py:attribute:: panel
+
+
+   .. py:method:: process_file(path: pathlib.Path, output: pathlib.Path)
+
+      Collapse UMIs from a single parquet file containing molecular data.
+
+
+
+   .. py:attribute:: region_id
+
+
+   .. py:method:: statistics() -> IndependentCollapseStatisticsCollector
+
+      Return the statistics collected during the collapse process.
+
+
+
+   .. py:attribute:: threads
+      :value: -1
+
+

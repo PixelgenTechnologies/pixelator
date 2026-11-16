@@ -1,0 +1,50 @@
+pixelator.pna.analysis.segmentation.distance.distance_from_node_set
+===================================================================
+
+.. py:function:: pixelator.pna.analysis.segmentation.distance.distance_from_node_set(graph: pixelator.pna.graph.PNAGraph, seed_nodes: collections.abc.Hashable | collections.abc.Sequence[collections.abc.Hashable], max_iter: int = 40, verbose: bool = False) -> pixelator.pna.graph.PNAGraph
+
+   Compute integer hop distance from seed nodes on a cell graph.
+
+   Runs a multi-source breadth-first search on ``graph``. Each seed has
+   distance 0. Every other node gets the length of the shortest unweighted
+   path to the nearest seed, up to ``max_iter`` hops. Nodes that are never
+   reached keep a missing value.
+
+   The result is stored as the node attribute ``distance_from_seed``,
+   replacing that attribute if it already exists. The same ``PNAGraph``
+   instance is updated in place and returned.
+
+   :param graph: Component graph to annotate, typically
+                 ``component.graph`` from a ``PNAPixelDataset`` edgelist
+                 iterator.
+   :param seed_nodes: One node name or a sequence of node names that must
+                      all be present in ``graph``.
+   :param max_iter: Maximum hop distance to compute. Nodes farther than this
+                    (and disconnected nodes) stay missing. Default 40.
+   :param verbose: If True, log how many new nodes are reached at each
+                   iteration. Default False.
+
+   :returns: The same ``PNAGraph``, with integer ``distance_from_seed`` on
+             reached nodes and ``None`` on unreached nodes.
+
+   :raises TypeError: If ``graph`` is not a ``PNAGraph``, or if ``max_iter``
+       or ``verbose`` have the wrong type.
+   :raises ValueError: If ``seed_nodes`` is empty, a seed is missing from
+       the graph, or ``max_iter`` is negative.
+
+   .. rubric:: Examples
+
+   Distances from one node on a component graph::
+
+       from pixelator.pna.analysis import distance_from_node_set
+       from pixelator.pna.pixeldataset import read
+
+       component = next(read("sample.pxl").edgelist().iterator())
+       seed = next(iter(component.graph.raw.nodes))
+       distance_from_node_set(component.graph, seed)
+
+   .. seealso::
+
+      ``distance_from_node_set`` in pixelatorR, the equivalent function
+      for R users.
+

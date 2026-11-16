@@ -1,0 +1,74 @@
+pixelator.pna.collapse.independent.shared_memory_registry.SharedMemoryRegistry
+==============================================================================
+
+.. py:class:: pixelator.pna.collapse.independent.shared_memory_registry.SharedMemoryRegistry
+
+   Helper class that wraps a shared memory manager but registers all allocations by name.
+
+   The registry can be used to allocate shared memory buffers and numpy arrays backed by shared
+   memory.
+   The buffers and arrays can be retrieved by name from the registry.
+   Only the shared memory buffers are stored in the registry, the numpy arrays are recreated from
+   the
+   shared memory buffers when requested.
+
+   This makes recreating the numpy arrays from the SharedMemory objects across processes easier.
+
+
+   .. py:method:: allocate_array(name: str, shape: tuple[int] | tuple[int, int], dtype: numpy.typing.DTypeLike, zero_init: bool = True) -> numpy.typing.NDArray
+
+      Allocates a new SharedMemory buffer and creates a numpy array backed by this memory.
+
+      :param name: The name to register the array under in the registry.
+      :param shape: The shape of the array.
+      :param dtype: The data type of the array.
+      :param zero_init: Whether to initialize the array with zeros.
+
+      :returns: A numpy array backed by shared memory.
+
+
+
+   .. py:method:: allocate_buffer(name: str, n_bytes: int) -> multiprocessing.shared_memory.SharedMemory
+
+      Allocates a new SharedMemory buffer.
+
+      :param name: The name of the buffer.
+      :param n_bytes: The number of bytes to allocate.
+
+      :returns: A SharedMemory object representing the allocated buffer.
+
+
+
+   .. py:method:: get_array(name: str) -> numpy.ndarray
+
+      Query the registry for a shared memory array by name.
+
+      The array will be recreated from the registered shared memory buffer.
+
+      :param name: The name of the array
+
+
+
+   .. py:method:: get_buffer(name: str) -> multiprocessing.shared_memory.SharedMemory | None
+
+      Query the registry for a shared memory buffer by name.
+
+      :param name: The name of the buffer
+
+
+
+   .. py:method:: read_only_view() -> ReadOnlySharedMemoryRegistry
+
+      Return a read-only view of the registry.
+
+      This view can be shared across threads
+
+
+
+   .. py:method:: unlink_buffer(name) -> None
+
+      Unlink a shared memory buffer by name.
+
+      :param name: The name of the buffer
+
+

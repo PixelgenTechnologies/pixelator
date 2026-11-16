@@ -1,0 +1,45 @@
+pixelator.pna.demux.barcode_identifier.BarcodeIdentifier
+========================================================
+
+.. py:class:: pixelator.pna.demux.barcode_identifier.BarcodeIdentifier(assay: pixelator.pna.config.PNAAssay, panel: pixelator.pna.config.PNAAntibodyPanel, mismatches: int = 1, writer=None)
+
+   Bases: :py:obj:`cutadapt.steps.SingleEndStep`, :py:obj:`cutadapt.steps.HasFilterStatistics`, :py:obj:`pixelator.pna.read_processing.statistics.HasCustomStatistics`
+
+
+   A pipeline filter that finds the nearest antibody for a given barcode.
+
+
+   .. py:attribute:: assay
+
+
+   .. py:method:: descriptive_identifier()
+
+      Return a short name describing the step for the "filtered" section of the Statistics.
+
+
+
+   .. py:method:: filtered()
+
+      Return the number of reads that passed the barcode identifier.
+
+
+
+   .. py:method:: get_statistics() -> BarcodeIdentifierStatistics
+
+      Return the statistics object.
+
+
+
+   .. py:method:: get_statistics_name()
+
+      Return a short name describing the statistics object.
+
+
+
+   .. py:attribute:: mismatches
+      :value: 1
+
+
+
+   .. py:attribute:: panel
+

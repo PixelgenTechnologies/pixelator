@@ -1,0 +1,29 @@
+pixelator.pna.pixeldataset.saver.PixelDatasetSaver
+==================================================
+
+.. py:class:: pixelator.pna.pixeldataset.saver.PixelDatasetSaver(pxl_dataset)
+
+   A class to save a PixelDataset to disk.
+
+
+   .. py:attribute:: pxl_dataset
+
+
+   .. py:method:: save(sample_name: str, output_path: pathlib.Path | str, optimize_disk_usage: bool = True) -> pixelator.pna.pixeldataset.io.PxlFile
+
+      Save one PixelDataset sample to a pxl file with component filters applied.
+
+      NB: for the time being, no marker filters are applied to the saved file.
+
+      This will copy the entire sample to a new file, applying any filters that have been set on
+      the PxlFile
+      on-disk.
+
+      :param sample_name: The name of the sample to save.
+      :param output_path: The path to save the sample to.
+      :param optimize_disk_usage: If True, the saved file will be optimized for disk usage. If this
+                                  is active a temporary file will be written before the final file is written to disk.
+
+      :returns: The PxlFile pointing to the saved PixelDataset.
+
+

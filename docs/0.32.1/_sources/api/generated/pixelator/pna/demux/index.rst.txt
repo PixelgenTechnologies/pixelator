@@ -1,0 +1,44 @@
+pixelator.pna.demux
+===================
+
+.. py:module:: pixelator.pna.demux
+
+.. autoapi-nested-parse::
+
+   Entrypoint for demultiplexing functions.
+
+   Copyright © 2024 Pixelgen Technologies AB
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/pna/demux/barcode_demuxer/index
+   /api/generated/pixelator/pna/demux/barcode_identifier/index
+   /api/generated/pixelator/pna/demux/correction/index
+   /api/generated/pixelator/pna/demux/pipeline/index
+   /api/generated/pixelator/pna/demux/process/index
+   /api/generated/pixelator/pna/demux/report/index
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/demux/correct_marker_barcodes
+   /api/generated/pixelator/pna/demux/demux_barcode_groups
+   /api/generated/pixelator/pna/demux/finalize_batched_groups
+
+.. autoapisummary::
+
+   pixelator.pna.demux.correct_marker_barcodes
+   pixelator.pna.demux.demux_barcode_groups
+   pixelator.pna.demux.finalize_batched_groups
+
+

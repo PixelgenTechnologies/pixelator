@@ -1,0 +1,21 @@
+pixelator.pna.plot.molecule_rank_plot
+=====================================
+
+.. py:function:: pixelator.pna.plot.molecule_rank_plot(data: pandas.DataFrame, group_by: Optional[str] = None) -> Tuple[matplotlib.figure.Figure, matplotlib.axes.Axes]
+
+   Plot molecule count (``n_umi``) per component against component rank (based on ``n_umi``).
+
+   Each row of data represents one component. Components are ranked by
+   descending ``n_umi`` (rank 1 corresponds to the highest count). When ``group_by`` is set,
+   ranks are computed within each group and series are drawn in separate colors.
+
+   :param data: DataFrame with an ``n_umi`` column giving the molecule count per
+                component.
+   :param group_by: Optional column name used to rank within groups and color
+                    the plot.
+
+   :returns: A representation of the log-log plot for number of molecules vs component rank, which can be used for quality control.
+
+   :raises AssertionError: If ``n_umi`` or ``group_by`` is missing from the columns in ``data``.
+   :raises ValueError: If the type of ``data[group_by]`` is invalid.
+

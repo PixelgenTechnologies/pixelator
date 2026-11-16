@@ -1,0 +1,15 @@
+pixelator.pna.config.panel.load_antibody_panels
+===============================================
+
+.. py:function:: pixelator.pna.config.panel.load_antibody_panels(config: pixelator.pna.config.config_class.PNAConfig, panels: pixelator.common.types.PathType | Sequence[pixelator.common.types.PathType]) -> PNAAntibodyPanel
+
+   Load one or more panels and concatenate them.
+
+   A single path or name is returned as that panel. Several inputs are
+   concatenated in order.
+
+   :param config: the config object
+   :param panels: one panel path or name, or a sequence of them
+
+   :returns: the antibody panel (PNAAntibodyPanel)
+

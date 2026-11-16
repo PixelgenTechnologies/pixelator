@@ -1,0 +1,18 @@
+pixelator.pna.analysis.permute.permute_node_markers
+===================================================
+
+.. py:function:: pixelator.pna.analysis.permute.permute_node_markers(node_markers: pandas.DataFrame, random_number_generator: Optional[numpy.random.Generator] = None, node_a_rows: Optional[pandas.Series] = None)
+
+   Permute markers in a node_markers DataFrame.
+
+   This function permutes the node_markers by shuffling the corresponding
+   markers to umi column. If node_a_rows is provided, markers from COa nodes
+   and COb nodes will be shuffled separately.
+
+   :param node_markers: A DataFrame representing the node_markers (nodes as rows and markers as
+                        columns)
+   :param random_number_generator: A RandomNumberGenerator instance
+   :param node_a_rows: A boolean Series indicating which rows are COa nodes
+
+   :returns: A DataFrame containing the permuted node_markers
+

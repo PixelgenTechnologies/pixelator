@@ -1,0 +1,42 @@
+pixelator.pna.amplicon.filters.LowComplexityUMI
+===============================================
+
+.. py:class:: pixelator.pna.amplicon.filters.LowComplexityUMI(assay: pixelator.pna.config.PNAAssay, proportion: float = 0.8)
+
+   Bases: :py:obj:`cutadapt.predicates.Predicate`
+
+
+   Select reads that have low complexity in the UMI1 and UMI2 regions.
+
+   Low complexity is defined as having a single base that makes up more than
+   a given proportion of the bases in the read.
+
+   This filtering expects the full amplicon sequence as input.
+
+
+   .. py:attribute:: assay
+
+
+   .. py:method:: descriptive_identifier() -> str
+
+      Return a string identifier for this predicate.
+
+      Used in reports and added as a comment to the sequence id when writing failed reads.
+
+
+
+   .. py:attribute:: proportion
+      :value: 0.8
+
+
+
+   .. py:method:: test(read, info: cutadapt.info.ModificationInfo = None) -> bool
+
+      Return True if the read has low complexity.
+
+      :param read: The read to test.
+      :param info: The modification info.
+
+      :returns: True if the read has low complexity, False otherwise.
+
+

@@ -1,0 +1,15 @@
+pixelator.pna.graph.component_recovery_utils.name_components_with_umi_hashes
+============================================================================
+
+.. py:function:: pixelator.pna.graph.component_recovery_utils.name_components_with_umi_hashes(edgelist: polars.LazyFrame) -> polars.LazyFrame
+
+   Map each ``component`` id to a stable hex hash from that component's UMIs.
+
+   Groups rows by ``component``, takes the distinct ``umi1`` and ``umi2`` values per group,
+   and replaces the ``component`` column with ``hash_component`` applied to their combined set.
+   Two components with the same UMI multiset get the same name.
+
+   :param edgelist: Lazy edgelist with ``component``, ``umi1``, and ``umi2`` columns.
+
+   :returns: The edgelist with ``component`` rewritten to UMI-derived hash strings.
+

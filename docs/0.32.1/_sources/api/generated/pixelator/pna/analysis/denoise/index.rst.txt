@@ -1,0 +1,64 @@
+pixelator.pna.analysis.denoise
+==============================
+
+.. py:module:: pixelator.pna.analysis.denoise
+
+.. autoapi-nested-parse::
+
+   Denoise module.
+
+   Functions and classes relating to denoising PNA components.
+
+   Copyright © 2025 Pixelgen Technologies AB
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.analysis.denoise.logger
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/analysis/denoise/DenoiseGraph
+
+.. autoapisummary::
+
+   pixelator.pna.analysis.denoise.DenoiseGraph
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/analysis/denoise/denoise_ace
+   /api/generated/pixelator/pna/analysis/denoise/denoise_one_core_layer
+   /api/generated/pixelator/pna/analysis/denoise/denoise_pls
+   /api/generated/pixelator/pna/analysis/denoise/get_overexpressed_markers_in_one_core
+   /api/generated/pixelator/pna/analysis/denoise/get_stranded_nodes
+   /api/generated/pixelator/pna/analysis/denoise/write_denoised_edgelist
+
+.. autoapisummary::
+
+   pixelator.pna.analysis.denoise.denoise_ace
+   pixelator.pna.analysis.denoise.denoise_one_core_layer
+   pixelator.pna.analysis.denoise.denoise_pls
+   pixelator.pna.analysis.denoise.get_overexpressed_markers_in_one_core
+   pixelator.pna.analysis.denoise.get_stranded_nodes
+   pixelator.pna.analysis.denoise.write_denoised_edgelist
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+

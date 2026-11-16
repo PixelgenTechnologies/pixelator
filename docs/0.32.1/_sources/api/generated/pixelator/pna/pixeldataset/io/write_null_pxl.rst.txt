@@ -1,0 +1,24 @@
+pixelator.pna.pixeldataset.io.write_null_pxl
+============================================
+
+.. py:function:: pixelator.pna.pixeldataset.io.write_null_pxl(path: pathlib.Path, *, sample_name: str, reason: str, panel_name: str | None = None, panel_version: str | None = None, source_metadata: dict | None = None) -> PxlFile
+
+   Write a null pxl file that records why a sample is empty.
+
+   The file contains the mandatory pxl tables (empty) and metadata with
+   ``null`` set and a non-empty ``null_reason``. Keys from ``source_metadata``
+   other than the file's own identity (sample name, null flag, reason,
+   version, technology) are copied through, so panel fields and any other
+   reader-facing metadata survive a pass-through.
+
+   :param path: Destination ``.pxl`` path.
+   :param sample_name: Sample the file stands in for.
+   :param reason: Why the sample is null. Must be non-empty.
+   :param panel_name: Antibody panel name, when known. Overrides a copied value.
+   :param panel_version: Antibody panel version, when known. Overrides a copied value.
+   :param source_metadata: Metadata from an upstream null file to carry forward.
+
+   :returns: The written null pxl file.
+
+   :raises ValueError: If ``reason`` is empty.
+

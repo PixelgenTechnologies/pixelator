@@ -1,0 +1,25 @@
+pixelator.common.report.json_encoder.PixelatorJSONEncoder
+=========================================================
+
+.. py:class:: pixelator.common.report.json_encoder.PixelatorJSONEncoder(*, skipkeys=False, ensure_ascii=True, check_circular=True, allow_nan=True, sort_keys=False, indent=None, separators=None, default=None)
+
+   Bases: :py:obj:`json.JSONEncoder`
+
+
+   Custom JSON encoder for use in Pixelator.
+
+   Support pydantic models and dataclasses serialization.
+
+
+   .. py:method:: default(obj: Any) -> Any
+
+      Return a serializable object for ``obj``.
+
+      Dump pydantic models to json or calls the base class implementation
+      for other types.
+
+      :param obj: object to serialize
+
+      :returns: a serializable object
+
+

@@ -1,0 +1,79 @@
+pixelator.pna.analysis.proximity.filter_proximity_scores
+========================================================
+
+.. py:function:: pixelator.pna.analysis.proximity.filter_proximity_scores(proximity_df: pandas.DataFrame, background_threshold_pct: float | None = None, background_threshold_count: float | None = None, min_cells_count: int | None = None) -> pandas.DataFrame
+
+   Remove marker pairs with too little signal from a proximity score table.
+
+   Proximity scores are reported for every marker pair detected in a cell,
+   including pairs where one or both markers are barely present. Such pairs
+   may reflect background and can distort downstream summaries and
+   heatmaps, so it is usually worth dropping them before further analysis.
+
+   At least one threshold must be given. When several are given, they are
+   applied in this order:
+
+   1. ``background_threshold_pct`` keeps a pair only if both of its markers
+      make up at least this fraction of the cell's UMI counts. The isotype
+      control fraction for your panel is a good choice of cutoff.
+   2. ``background_threshold_count`` keeps a pair only if both of its markers
+      have at least this many UMI counts.
+   3. ``min_cells_count`` keeps a marker pair only if it is detected in at
+      least this many cells.
+
+   Using ``background_threshold_pct`` on its own is usually enough. Unlike
+   a raw count cutoff, a fraction does not depend on how many molecules a
+   cell has, so the same threshold is meaningful for both small and large cells.
+
+   The filters need the per-cell marker abundance columns that
+   :meth:`~pixelator.pna.pixeldataset.proximity.Proximity.to_df` adds by
+   default (``add_marker_counts=True``): ``marker_1_freq`` and
+   ``marker_2_freq`` for the fraction filter, ``marker_1_count`` and
+   ``marker_2_count`` for the count filter. Proximity tables exported from
+   pixelatorR also work, where the same columns are named ``p1`` and ``p2``,
+   and ``count_1`` and ``count_2``.
+
+   :param proximity_df: Proximity scores with one row per cell (``component``)
+                        and marker pair, for example from
+                        ``dataset.proximity().to_df()``.
+   :param background_threshold_pct: Minimum fraction of a cell's UMI counts that
+                                    both markers in a pair must reach, as a value between 0 and 1. For
+                                    example, 0.001 in a cell with 20,000 molecules requires at least
+                                    20 counts for both markers.
+   :param background_threshold_count: Minimum number of UMI counts that both
+                                      markers in a pair must reach. This is an absolute cutoff, so it
+                                      removes more pairs in small cells than in large ones.
+   :param min_cells_count: Minimum number of cells a marker pair must be
+                           detected in. Useful for dropping pairs seen in only a handful of
+                           cells.
+
+   :returns: The rows of ``proximity_df`` that pass every threshold you set, with
+             the columns unchanged.
+
+   :raises ValueError: If no threshold is set, if a threshold is outside its
+       allowed range, or if the table lacks the columns a requested
+       filter needs.
+
+   .. rubric:: Examples
+
+   Keep the marker pairs where both markers are above the isotype
+   control fraction, and see how much of the table that leaves::
+
+       from pixelator.pna.analysis import filter_proximity_scores
+       from pixelator.pna.pixeldataset import read
+
+       dataset = read("sample.pxl")
+       proximity_table = dataset.proximity().to_df()
+       filtered = filter_proximity_scores(
+           proximity_table,
+           background_threshold_pct=0.001,
+       )
+       pct_rows_kept = round(
+           len(filtered) / len(proximity_table) * 100, 2
+       )
+
+   .. seealso::
+
+      ``FilterProximityScores`` in pixelatorR, the equivalent function for
+      R users.
+

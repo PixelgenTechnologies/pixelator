@@ -1,0 +1,16 @@
+pixelator.pna.graph.cycle_analysis.remove_no_cycle_edges
+========================================================
+
+.. py:function:: pixelator.pna.graph.cycle_analysis.remove_no_cycle_edges(input_edgelist_path: pathlib.Path, n_threads: int = 1, working_dir: pathlib.Path = DEFAULT_WORKING_DIR) -> tuple[int, pandas.DataFrame, pathlib.Path]
+
+   Remove edges that do not participate in any cycles from the edgelist.
+
+   :param input_edgelist_path: Path to the input edgelist Parquet file (hive layout supported).
+   :param n_threads: Number of parallel threads to use.
+   :param working_dir: Directory for the merged output (``working_edgelist_with_cycle_verification``);
+                       defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
+
+   :returns: Total number of edges removed, the distribution of cycle lengths for remaining edges,
+             and the path to the written output (hive-style Parquet under
+             ``working_edgelist_with_cycle_verification``).
+

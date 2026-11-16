@@ -1,0 +1,40 @@
+pixelator.pna.graph_collapse.GraphCollapseResult
+================================================
+
+.. py:class:: pixelator.pna.graph_collapse.GraphCollapseResult
+
+   Stats the graph-collapse report reads after the collapse.
+
+   ``component_count``, ``nodes_considered``, ``targets_found`` and the two
+   distributions come from the binding. ``targets_found`` and the
+   distributions describe the matches the search kept, before pairs with
+   different markers are dropped, so ``nodes_collapsed`` can be smaller.
+
+
+   .. py:attribute:: bfs_distance_distribution
+      :type:  dict[int, int]
+
+
+   .. py:attribute:: collapsed_sequences
+      :type:  list[dict]
+
+
+   .. py:attribute:: component_count
+      :type:  int
+
+
+   .. py:attribute:: hamming_distance_distribution
+      :type:  dict[int, int]
+
+
+   .. py:attribute:: nodes_collapsed
+      :type:  int
+
+
+   .. py:attribute:: nodes_considered
+      :type:  int
+
+
+   .. py:attribute:: targets_found
+      :type:  int
+

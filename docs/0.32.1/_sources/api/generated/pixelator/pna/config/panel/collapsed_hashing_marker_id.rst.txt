@@ -1,0 +1,7 @@
+pixelator.pna.config.panel.collapsed_hashing_marker_id
+======================================================
+
+.. py:function:: pixelator.pna.config.panel.collapsed_hashing_marker_id(marker_id: str) -> str
+
+   Return the marker id sample calling stores for a hashing antibody.
+

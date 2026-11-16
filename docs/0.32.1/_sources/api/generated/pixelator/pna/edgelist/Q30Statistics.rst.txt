@@ -1,0 +1,47 @@
+pixelator.pna.edgelist.Q30Statistics
+====================================
+
+.. py:class:: pixelator.pna.edgelist.Q30Statistics(/, **data: Any)
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+
+   Fraction of bases at Phred 30 or better, per region of interest.
+
+   Measured over every read the stage consumed, including the ones it went on
+   to discard, since quality is profiled ahead of the keep/drop decision. Each
+   fraction pools base counts across reads rather than averaging per-read
+   rates, so a short read does not weigh as much as a long one.
+
+   A region that no read was long enough to reach reports 0.0.
+
+
+   .. py:attribute:: pid1
+      :type:  float
+      :value: None
+
+
+
+   .. py:attribute:: pid2
+      :type:  float
+      :value: None
+
+
+
+   .. py:attribute:: total
+      :type:  float
+      :value: None
+
+
+
+   .. py:attribute:: umi1
+      :type:  float
+      :value: None
+
+
+
+   .. py:attribute:: umi2
+      :type:  float
+      :value: None
+
+

@@ -1,0 +1,272 @@
+pixelator.pna.config.PNAAntibodyPanel
+=====================================
+
+.. py:class:: pixelator.pna.config.PNAAntibodyPanel(df: pandas.DataFrame, sources: list[PanelSource], marker_source_ids: pandas.Series, file_name: Optional[str] = None, filepath: Optional[pixelator.common.types.PathType] = None)
+
+   Class representing a PNA antibody panel.
+
+
+   .. py:property:: aliases
+      :type: list[str]
+
+
+      Return the (optional) list of panel file aliases.
+
+      :raises ValueError: When this panel does not have exactly one source.
+          Read ``sources`` instead.
+
+
+   .. py:property:: archived
+      :type: Optional[bool]
+
+
+      Return whether the panel is marked as archived.
+
+      :raises ValueError: When this panel does not have exactly one source.
+          Read ``sources`` instead.
+
+
+   .. py:method:: concatenate(panels: Sequence[PNAAntibodyPanel]) -> PNAAntibodyPanel
+      :classmethod:
+
+
+      Concatenate panels into one panel.
+
+      One panel is returned unchanged. Several panels are stacked in the
+      given order. The result keeps every input source.
+      ``marker_id``, ``sequence_1``, and ``sequence_2`` must be unique
+      across the concatenation, otherwise a ``ValueError`` names the sources
+      that share them. A column present on only some sources is
+      blank on the others, the same as an empty cell in a panel CSV.
+      Each source still remembers the columns it was loaded with.
+
+      :raises ValueError: If no panel is given, or if two sources share a marker
+          id or a sequence.
+
+
+
+   .. py:method:: copy() -> Self
+
+      Return a shallow copy with its own marker table and source list.
+
+
+
+   .. py:property:: description
+      :type: Optional[str]
+
+
+      Return the panel file description.
+
+      :raises ValueError: When this panel does not have exactly one source.
+          Read ``sources`` instead.
+
+
+   .. py:property:: df
+      :type: pandas.DataFrame
+
+
+      Return the panel dataframe.
+
+
+   .. py:property:: filename
+      :type: Optional[str]
+
+
+      Return the filename of the marker panel.
+
+
+   .. py:property:: filepath
+      :type: Optional[pathlib.Path]
+
+
+      Return the full path of the marker panel file, if any.
+
+
+   .. py:method:: from_adata(adata: anndata.AnnData, file_name: Optional[str] = None) -> Self
+      :classmethod:
+
+
+      Create an AntibodyPanel from an AnnData object.
+
+      :param adata: An AnnData object containing panel information.
+      :param file_name: The optional name of the file from which the AnnData object was loaded.
+
+      :returns: The AntibodyPanel object. (AntibodyPanel)
+
+      :raises KeyError: exception if panel information is missing in the AnnData object.
+
+
+
+   .. py:method:: from_csv(filename: pixelator.common.types.PathType) -> Self
+      :classmethod:
+
+
+      Create an AntibodyPanel from a csv panel file.
+
+      :param filename: The path to the panel file.
+
+      :returns: The AntibodyPanel object. (AntibodyPanel)
+
+      :raises AssertionError: exception if panel file is missing,
+
+
+
+   .. py:method:: from_metadata(df: pandas.DataFrame, metadata: pixelator.common.config.panel.AntibodyPanelMetadata, file_name: Optional[str] = None, filepath: Optional[pixelator.common.types.PathType] = None) -> Self
+      :classmethod:
+
+
+      Build a single-source panel from a marker table and its metadata.
+
+      :param df: Marker table, indexed by marker id.
+      :param metadata: Metadata for this panel file.
+      :param file_name: Basename of the file this panel was loaded from.
+      :param filepath: Full path of the file this panel was loaded from.
+
+      :raises AssertionError: If the marker table fails panel validation.
+
+
+
+   .. py:method:: from_panel_tables(markers: pandas.DataFrame, sources: pandas.DataFrame) -> Self
+      :classmethod:
+
+
+      Build a panel from the ``panels`` and ``panel_sources`` tables.
+
+      :param markers: The ``panels`` table, one row per marker.
+      :param sources: The ``panel_sources`` table, one row per source.
+
+      :returns: The stored panel.
+
+
+
+   .. py:method:: from_pxl_dataset(pxl_data: pixelator.pna.pixeldataset.dataset.PNAPixelDataset) -> PNAAntibodyPanel
+      :classmethod:
+
+
+      Create an AntibodyPanel from the files of a pxl dataset.
+
+      :param pxl_data: A PNAPixelDataset object.
+
+      :returns: The panel stored in the dataset's files.
+
+      :raises KeyError: exception if panel information is missing in a file.
+      :raises ValueError: if the files do not store the same panel.
+
+
+
+   .. py:property:: hashing_marker_ids
+      :type: set[str]
+
+
+      Return marker ids flagged by the ``sample_hashing`` column.
+
+
+   .. py:property:: marker_source_ids
+      :type: pandas.Series
+
+
+      Return the panel-source index of each marker.
+
+
+   .. py:property:: markers
+      :type: List[str]
+
+
+      Return the list of unique markers in the panel.
+
+
+   .. py:property:: markers_control
+      :type: List[str]
+
+
+      Return a list of marker control (names).
+
+
+   .. py:property:: metadata
+      :type: pixelator.common.config.panel.AntibodyPanelMetadata
+
+
+      Metadata for the only source in this panel.
+
+      :raises ValueError: When this panel does not have exactly one source.
+          Read ``sources`` instead.
+
+
+   .. py:property:: name
+      :type: str
+
+
+      Panel name.
+
+      :raises ValueError: When this panel does not have exactly one source.
+          Read ``sources`` instead.
+
+
+   .. py:property:: product
+      :type: Optional[str]
+
+
+      Product identifier from metadata, if present.
+
+      :returns: Product name, or None when the single source does not set one.
+
+      :raises ValueError: When this panel does not have exactly one source.
+          Read ``sources`` instead.
+
+
+   .. py:method:: replace_source(source_index: int, replacement: PNAAntibodyPanel) -> Self
+
+      Return a copy with one source replaced by a single-source panel.
+
+      A column present on only one side is blank on the other, the same as
+      an empty cell in a panel CSV.
+
+
+
+   .. py:property:: size
+      :type: int
+
+
+      Return the size of the marker panel.
+
+
+   .. py:method:: source_as_panel(source_index: int) -> Self
+
+      Return one source as its own single-source panel.
+
+      Columns added because another source had them are left behind. A
+      source that was stored without its column list keeps every column.
+
+
+
+   .. py:attribute:: sources
+
+
+   .. py:method:: to_polars() -> polars.DataFrame
+
+      Convert the panel to a Polars DataFrame.
+
+
+
+   .. py:method:: validate_antibody_panel(panel_df: pandas.DataFrame, validate_types: bool = True) -> list[str]
+      :classmethod:
+
+
+      Validate antibody panel schema and content.
+
+      :param panel_df: Dataframe containing panel markers and sequences.
+      :param validate_types: If True, validate dataframe column types.
+
+      :returns: A list of validation error messages. Empty means valid input.
+
+
+
+   .. py:property:: version
+      :type: str
+
+
+      Panel version.
+
+      :raises ValueError: When this panel does not have exactly one source.
+          Read ``sources`` instead.
+

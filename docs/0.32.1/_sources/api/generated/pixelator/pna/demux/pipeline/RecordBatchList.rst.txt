@@ -1,0 +1,31 @@
+pixelator.pna.demux.pipeline.RecordBatchList
+============================================
+
+.. py:class:: pixelator.pna.demux.pipeline.RecordBatchList
+
+   A small helper class to store RecordBatches in a list and keep track of the total size.
+
+
+   .. py:method:: append(batch: pyarrow.RecordBatch)
+
+      Append a new RecordBatch to the list.
+
+
+
+   .. py:method:: batches() -> Iterator[pyarrow.RecordBatch]
+
+      Return an iterator over the RecordBatches.
+
+
+
+   .. py:method:: clear()
+
+      Clear the list of RecordBatches.
+
+
+
+   .. py:method:: num_rows()
+
+      Return the total size of RecordBatches in the list.
+
+

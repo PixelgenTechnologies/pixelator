@@ -1,0 +1,113 @@
+pixelator.pna.plot.proximity.proximity_heatmap
+==============================================
+
+.. py:function:: pixelator.pna.plot.proximity.proximity_heatmap(data: pandas.DataFrame, marker1_col: str = 'marker_1', marker2_col: str = 'marker_2', value_col: str = 'mean_log2_ratio', size_col: Union[str, None] = 'p_adjusted', size_col_transform: Union[Callable[[pandas.Series], pandas.Series], None] = _neg_log10_p, size_range: Tuple[float, float] = (20.0, 300.0), cmap: Union[str, matplotlib.colors.Colormap, None] = None, cluster_rows: bool = True, cluster_cols: bool = True, clustering_metric: str = 'euclidean', clustering_method: str = 'complete', kind: Literal['tiles', 'dots'] = 'tiles', return_plot_data: bool = False, symmetrise: bool = True, legend_range: Union[Tuple[float, float], None] = None, legend_title: Union[str, None] = None, highlight_pairs: Union[pandas.DataFrame, None] = None, highlight_colors: Union[str, Mapping[object, str]] = 'black', highlight_color_col: Union[str, None] = None, highlight_linewidth: float = 1.2, highlight_shrink: float = 0.1, figsize: Union[Tuple[float, float], None] = None) -> Union[Tuple[matplotlib.figure.Figure, matplotlib.axes.Axes], pandas.DataFrame]
+
+   Plot a heatmap of summary proximity scores between marker pairs.
+
+   This function takes a long-format table with one row per marker pair
+   (e.g. the output of `pixelator.pna.analysis.summarize_proximity_scores` or
+   `pixelator.pna.analysis.calculate_differential_proximity`) and plots it
+   either as a clustered heatmap of tiles, or as a dot plot where dot size
+   encodes a second (e.g. significance) column.
+
+   Defaults match `summarize_proximity_scores` (``mean_log2_ratio``). For
+   `calculate_differential_proximity` results, pass
+   ``value_col="median_diff"`` (and keep the default ``size_col="p_adjusted"``
+   for ``kind="dots"``). Summary tables have no p-value column, so use
+   ``size_col=None`` when drawing them as dots.
+
+   :param data: A long-format DataFrame with one row per marker pair, containing
+                at least ``marker1_col``, ``marker2_col`` and ``value_col``,
+                and also ``size_col`` if ``kind="dots"`` and ``size_col`` is not
+                ``None``.
+   :param marker1_col: Column with the first marker of each pair. Defaults to
+                       ``"marker_1"``.
+   :param marker2_col: Column with the second marker of each pair. Defaults to
+                       ``"marker_2"``.
+   :param value_col: Numeric column to map to tile/dot color. Defaults to
+                     ``"mean_log2_ratio"`` (from `summarize_proximity_scores`). Use
+                     ``"median_diff"`` for `calculate_differential_proximity` results.
+   :param size_col: Numeric column to map to dot size, only used when
+                    ``kind="dots"``. Set to ``None`` to draw all dots at the same
+                    size. Defaults to ``"p_adjusted"`` (from
+                    `calculate_differential_proximity`).
+   :param size_col_transform: Optional function applied to ``data[size_col]``
+                              before mapping it to dot size. Defaults to ``-log10``, so smaller
+                              (more significant) p-values become larger dots. Pass ``None`` for
+                              a linear mapping of the raw column onto ``size_range``.
+   :param size_range: The ``(min, max)`` marker area (in points²) that
+                      ``size_col`` is scaled to. Defaults to ``(20.0, 300.0)``.
+   :param cmap: The colormap used for ``value_col``. Defaults to a Pixelgen
+                branded divergent blues-to-reds colormap, centered at 0.
+   :param cluster_rows: Whether to order rows (``marker1_col`` values) by
+                        hierarchical clustering. Defaults to ``True``.
+   :param cluster_cols: Whether to order columns (``marker2_col`` values) by
+                        hierarchical clustering. Defaults to ``True``.
+   :param clustering_metric: The distance metric used for clustering, passed to
+                             `scipy.cluster.hierarchy.linkage`. Defaults to ``"euclidean"``.
+   :param clustering_method: The linkage method used for clustering, passed to
+                             `scipy.cluster.hierarchy.linkage`. Defaults to ``"complete"``.
+   :param kind: ``"tiles"`` draws a clustered heatmap (via `seaborn.clustermap`);
+                ``"dots"`` draws a dot plot with color mapped to ``value_col`` and
+                size mapped to ``size_col``. Defaults to ``"tiles"``.
+   :param return_plot_data: If ``True``, return the prepared data instead of
+                            plotting it: the wide pivoted matrix for ``kind="tiles"``, or the
+                            long-format DataFrame (with ``marker1_col``/``marker2_col`` cast to
+                            ordered categoricals reflecting the plot order) for
+                            ``kind="dots"``. Defaults to ``False``.
+   :param symmetrise: If ``True``, mirror each row (swapping ``marker1_col`` and
+                      ``marker2_col``) so that only one direction of each pair needs to
+                      be present in ``data``. Defaults to ``True``.
+   :param legend_range: The ``(min, max)`` range of the color scale. Defaults to
+                        ``None``, which uses a range symmetric around 0, spanning the
+                        largest absolute value of ``value_col``.
+   :param legend_title: The title of the color legend/colorbar. Defaults to
+                        ``None``, which uses ``value_col``.
+   :param highlight_pairs: An optional DataFrame of marker pairs to outline with
+                           a colored border, with columns ``marker1_col`` and ``marker2_col``
+                           (and, if ``highlight_color_col`` is given, that column too).
+                           Pairs not present in ``data`` are silently skipped. Defaults to
+                           ``None``.
+   :param highlight_colors: The outline color for highlighted pairs. Either a
+                            single color string (used for every row of ``highlight_pairs``),
+                            or, if ``highlight_color_col`` is given, a mapping from each value
+                            of that column to a color. Defaults to ``"black"``.
+   :param highlight_color_col: An optional column of ``highlight_pairs`` used to
+                               look up a per-pair outline color from ``highlight_colors``.
+                               Defaults to ``None``.
+   :param highlight_linewidth: The line width of the highlight outlines.
+                               Defaults to ``1.2``.
+   :param highlight_shrink: How much to shrink the highlight outline relative to
+                            the full cell/grid spacing, as a fraction in ``[0, 1)``. Defaults
+                            to ``0.1``.
+   :param figsize: The figure size, in inches. Defaults to ``None``, which uses
+                   a size proportional to the number of markers. When set for
+                   ``kind="dots"``, the auto-computed layout is scaled to fill the
+                   given size.
+
+   .. rubric:: Example
+
+   >>> proximity_df = pixel_dataset.proximity()
+   >>> summary = summarize_proximity_scores(proximity_df)
+   >>> fig, ax = proximity_heatmap(summary)
+
+   >>> diff = calculate_differential_proximity(
+   ...     proximity_df,
+   ...     contrast_column="cell_type",
+   ...     reference="control",
+   ...     targets=["treated"],
+   ... )
+   >>> fig, ax = proximity_heatmap(diff, value_col="median_diff", kind="dots")
+
+   :returns: A tuple of the created figure and its main axes (the heatmap axes for
+             ``kind="tiles"``, the dot plot axes for ``kind="dots"``), unless
+             ``return_plot_data`` is ``True``, in which case the prepared plot data
+             is returned instead.
+
+   :raises ValueError: If a required column is missing, if ``data`` has more
+       than one row for some marker pair, if ``kind`` is not ``"tiles"``
+       or ``"dots"``, or if ``highlight_shrink`` is not in ``[0, 1)``.
+   :raises TypeError: If ``highlight_colors``/``highlight_color_col`` are
+       inconsistent (see above).
+

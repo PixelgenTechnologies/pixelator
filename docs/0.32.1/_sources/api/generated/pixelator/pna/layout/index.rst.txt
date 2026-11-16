@@ -1,0 +1,35 @@
+pixelator.pna.layout
+====================
+
+.. py:module:: pixelator.pna.layout
+
+.. autoapi-nested-parse::
+
+   Generate layouts for components in a Pixel dataset.
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/pna/layout/report/index
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/layout/CreateLayout
+
+.. autoapisummary::
+
+   pixelator.pna.layout.CreateLayout
+
+

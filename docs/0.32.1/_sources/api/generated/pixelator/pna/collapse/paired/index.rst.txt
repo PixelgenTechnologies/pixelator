@@ -1,0 +1,25 @@
+pixelator.pna.collapse.paired
+=============================
+
+.. py:module:: pixelator.pna.collapse.paired
+
+.. autoapi-nested-parse::
+
+   Classes and functions for collapsing using the paired strategy.
+
+   Copyright © 2025 Pixelgen Technologies AB
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/pna/collapse/paired/collapser/index
+   /api/generated/pixelator/pna/collapse/paired/combine_collapse/index
+   /api/generated/pixelator/pna/collapse/paired/report/index
+   /api/generated/pixelator/pna/collapse/paired/statistics/index
+
+

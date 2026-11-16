@@ -1,0 +1,28 @@
+pixelator.common.graph.node_metrics
+===================================
+
+.. py:module:: pixelator.common.graph.node_metrics
+
+.. autoapi-nested-parse::
+
+   Functions related to computing node metrics on graphs.
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/graph/node_metrics/compute_transition_probabilities
+   /api/generated/pixelator/common/graph/node_metrics/local_g
+
+.. autoapisummary::
+
+   pixelator.common.graph.node_metrics.compute_transition_probabilities
+   pixelator.common.graph.node_metrics.local_g
+
+

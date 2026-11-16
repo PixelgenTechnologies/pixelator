@@ -1,0 +1,18 @@
+pixelator.pna.read_processing.runners.WorkerException
+=====================================================
+
+.. py:exception:: pixelator.pna.read_processing.runners.WorkerException(wrapped_exception, tb_str)
+
+   Bases: :py:obj:`Exception`
+
+
+   An exception that occurred in a worker process.
+
+   Embeds the original exception and the traceback string.
+
+
+   .. py:attribute:: e
+
+
+   .. py:attribute:: tb_str
+

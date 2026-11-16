@@ -1,0 +1,25 @@
+pixelator.pna.graph.community_detection.merge_communities_with_many_crossing_edges
+==================================================================================
+
+.. py:function:: pixelator.pna.graph.community_detection.merge_communities_with_many_crossing_edges(edgelist: polars.DataFrame, node_community_dict: dict, max_edges_to_remove: int | None = None, max_edges_to_remove_relative: float | None = None) -> pandas.Series
+
+   Merge communities what have many crossing edges between them in an edge list.
+
+   This function takes an edge list and a dictionary with the community mapping
+   for each node. It then computes the number of edges between communities and
+   if they are higher than the given a threshold. It assigns the same community
+   id to the nodes in the highly connected communities. The
+   threshold is determined by an absolute count and/or relative to the number
+   of nodes in the smaller of the two communities, whichever is higher.
+   If one of them is None, only the other one is considered and if they are
+   both None, the split communities are not considered for merging.
+
+   :param edgelist: The edge list to process
+   :param node_community_dict: A dictionary mapping each node to a community
+   :param n_edges: The threshold for the number of edges to be found between communities to merge or
+                   None to avoid merging
+   :param max_edges_to_remove: Max edges to remove.
+   :param max_edges_to_remove_relative: Max edges to remove relative.
+
+   :returns: The updated community mapping
+

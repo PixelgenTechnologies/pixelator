@@ -1,0 +1,16 @@
+pixelator.pna.layout.report.LayoutSampleReport
+==============================================
+
+.. py:class:: pixelator.pna.layout.report.LayoutSampleReport(/, **data: Any)
+
+   Bases: :py:obj:`pixelator.pna.report.models.base.SampleReport`
+
+
+   Model for report data returned by the single-cell layout stage.
+
+
+   .. py:attribute:: report_type
+      :type:  Literal['layout']
+      :value: 'layout'
+
+

@@ -1,0 +1,30 @@
+pixelator.pna.analysis.comparison.compare_sample_pairs
+======================================================
+
+.. py:function:: pixelator.pna.analysis.comparison.compare_sample_pairs(pairs: Sequence[tuple], sample_names: Sequence[tuple[str, str]] | None = None, markers: set[str] | None = None, min_mean_clr: float = 1.5, min_expected_join_count: int = 10, min_n_cells: int = 50) -> list[SamplePairComparisonResult]
+
+   Compare abundance and proximity similarity across a list of sample pairs.
+
+   This is the main entry point for checking that pairs of samples are
+   similar in terms of abundance and proximity patterns. For each pair, mean
+   marker abundances (CLR) and mean marker-pair proximity scores are compared,
+   and their correlations are reported. See `compare_sample_pair` for details
+   on how a single pair is compared.
+
+   :param pairs: A list of ``(pxl1, pxl2)`` pairs, where each element is a
+                 `PNAPixelDataset`, a path to a ``.pxl`` file, or anything accepted
+                 by `pixelator.pna.read`.
+   :param sample_names: An optional list of ``(sample1_name, sample2_name)``
+                        tuples, parallel to ``pairs``, used for labeling the output. If
+                        not provided, sample names are inferred from each dataset.
+   :param markers: If provided, restrict the comparison to this set of markers
+                   for all pairs (still subject to the ``min_mean_clr`` filter).
+   :param min_mean_clr: The minimum mean CLR value (in both samples) for a
+                        marker to be included in the comparison. Defaults to 1.5.
+   :param min_expected_join_count: The minimum expected join count for a marker
+                                   pair to be included in the proximity comparison. Defaults to 10.
+   :param min_n_cells: The minimum number of components required for a marker
+                       pair to be included in the proximity comparison. Defaults to 50.
+
+   :returns: A list of `SamplePairComparisonResult`, one per pair in ``pairs``.
+

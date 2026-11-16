@@ -1,0 +1,39 @@
+pixelator.pna.pixeldataset.io.panel_alignment
+=============================================
+
+.. py:module:: pixelator.pna.pixeldataset.io.panel_alignment
+
+.. autoapi-nested-parse::
+
+   Work out how marker ids must be renamed so several pxl files line up.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/pixeldataset/io/panel_alignment/ViewAlignment
+
+.. autoapisummary::
+
+   pixelator.pna.pixeldataset.io.panel_alignment.ViewAlignment
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/pixeldataset/io/panel_alignment/align_view_panels
+
+.. autoapisummary::
+
+   pixelator.pna.pixeldataset.io.panel_alignment.align_view_panels
+
+

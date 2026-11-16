@@ -1,0 +1,50 @@
+pixelator.pna.aggregate.report.AggregateSampleReport
+====================================================
+
+.. py:class:: pixelator.pna.aggregate.report.AggregateSampleReport(/, **data: Any)
+
+   Bases: :py:obj:`pixelator.pna.report.models.SampleReport`
+
+
+   Model for report data returned by the aggregate stage.
+
+
+   .. py:attribute:: input_reads
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: output_molecules
+      :type:  int
+      :value: None
+
+
+
+   .. py:property:: output_reads
+      :type: int
+
+
+      The total number of output reads.
+
+      This is an alias for the input reads as no reads are removed during
+      the aggregate step.
+
+
+   .. py:attribute:: report_type
+      :type:  str
+      :value: 'aggregate'
+
+
+
+   .. py:attribute:: umi1_degree_distribution
+      :type:  dict[int, int]
+      :value: None
+
+
+
+   .. py:attribute:: umi2_degree_distribution
+      :type:  dict[int, int]
+      :value: None
+
+

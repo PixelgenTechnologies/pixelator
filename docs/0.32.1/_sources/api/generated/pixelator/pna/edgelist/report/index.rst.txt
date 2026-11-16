@@ -1,0 +1,28 @@
+pixelator.pna.edgelist.report
+=============================
+
+.. py:module:: pixelator.pna.edgelist.report
+
+.. autoapi-nested-parse::
+
+   Reporting metadata for the native edgelist command.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/edgelist/report/EdgelistSampleReport
+   /api/generated/pixelator/pna/edgelist/report/Q30Statistics
+
+.. autoapisummary::
+
+   pixelator.pna.edgelist.report.EdgelistSampleReport
+   pixelator.pna.edgelist.report.Q30Statistics
+
+

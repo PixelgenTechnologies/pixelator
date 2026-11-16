@@ -1,0 +1,26 @@
+pixelator.pna.analysis_engine.LoggingSetup
+==========================================
+
+.. py:class:: pixelator.pna.analysis_engine.LoggingSetup
+
+   Dataclass to hold the logging setup for the analysis engine.
+
+   Assumes that the logging setup uses a socket handler on local host
+   to manage the logging.
+
+
+   .. py:method:: from_logger(logger: logging.Logger)
+      :staticmethod:
+
+
+      Create a LoggingSetup from a logger.
+
+
+
+   .. py:attribute:: log_level
+      :type:  int
+
+
+   .. py:attribute:: port
+      :type:  int
+

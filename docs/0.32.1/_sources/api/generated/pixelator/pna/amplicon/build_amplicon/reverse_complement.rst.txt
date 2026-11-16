@@ -1,0 +1,11 @@
+pixelator.pna.amplicon.build_amplicon.reverse_complement
+========================================================
+
+.. py:function:: pixelator.pna.amplicon.build_amplicon.reverse_complement(seq: BytesOrString) -> BytesOrString
+
+   Compute the reverse complement of a DNA seq.
+
+   :param seq: the DNA sequence
+
+   :returns: the reverse complement of the input sequence (Bytes or Str depending on the input)
+

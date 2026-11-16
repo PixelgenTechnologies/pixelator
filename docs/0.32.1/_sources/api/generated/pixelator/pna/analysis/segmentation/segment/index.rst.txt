@@ -1,0 +1,26 @@
+pixelator.pna.analysis.segmentation.segment
+===========================================
+
+.. py:module:: pixelator.pna.analysis.segmentation.segment
+
+.. autoapi-nested-parse::
+
+   Segment a cell:cell conjugate graph into two cell types.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/analysis/segmentation/segment/segment_cell
+
+.. autoapisummary::
+
+   pixelator.pna.analysis.segmentation.segment.segment_cell
+
+

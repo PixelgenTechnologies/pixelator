@@ -1,0 +1,12 @@
+pixelator.pna.graph.component_recovery_utils.populate_component_stats_from_hybrid_detection
+===========================================================================================
+
+.. py:function:: pixelator.pna.graph.component_recovery_utils.populate_component_stats_from_hybrid_detection(component_stats: pixelator.pna.graph.report.GraphStatistics, pre_recovery_stats: pixelator_core.PyGraphProperties, post_flp_stats: pixelator_core.PyGraphProperties, post_recovery_stats: pixelator_core.PyGraphProperties) -> None
+
+   Fill graph statistics from hybrid (FLP + Leiden) community-detection outputs.
+
+   :param component_stats: Statistics object to update with filtering information.
+   :param pre_recovery_stats: Pre recovery stats.
+   :param post_flp_stats: Post flp stats.
+   :param post_recovery_stats: Post recovery stats.
+

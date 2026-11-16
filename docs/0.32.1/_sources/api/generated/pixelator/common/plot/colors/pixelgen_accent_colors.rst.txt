@@ -1,0 +1,26 @@
+pixelator.common.plot.colors.pixelgen_accent_colors
+===================================================
+
+.. py:function:: pixelator.common.plot.colors.pixelgen_accent_colors(hue: str | collections.abc.Sequence[str] | None = None, level: int | collections.abc.Sequence[int] | None = None) -> dict[str, str]
+
+   Get Pixelgen accent colors for the given hue(s) and/or level(s).
+
+   If only ``hue`` is given, all 12 levels of that hue (or hues) are
+   returned. If only ``level`` is given, all hues at that level (or levels)
+   are returned. If both are given, the colors at that hue/level
+   combination are returned.
+
+   :param hue: A hue name or list of hue names. Options are the keys of
+               `PIXELGEN_ACCENT_COLORS` (``"purples"``, ``"blues"``, ``"cyans"``,
+               ``"greens"``, ``"pinks"``, ``"reds"``, ``"oranges"``,
+               ``"yellows"``, ``"greys"``, ``"beiges"``, and ``"standardblues"``).
+               If None, all hues are used.
+   :param level: A level (1-12) or list of levels. If None, all levels are used.
+
+   :returns: A dict mapping ``"{hue}{level}"`` (e.g. ``"blues4"``) to a hex color
+             string.
+
+   :raises ValueError: If both ``hue`` and ``level`` are None, if ``hue``
+       contains an unknown hue name, or if ``level`` is out of the
+       ``[1, 12]`` range.
+

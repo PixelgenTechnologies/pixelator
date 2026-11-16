@@ -1,0 +1,62 @@
+pixelator.pna.demux.pipeline.DemuxWriterProcess
+===============================================
+
+.. py:class:: pixelator.pna.demux.pipeline.DemuxWriterProcess(output_directory: pathlib.Path, filename_policy: DemuxFilenamePolicy, queue: multiprocessing.Queue, connection: multiprocessing.connection.Connection, schema: pyarrow.Schema)
+
+   Bases: :py:obj:`mpctx_Process`
+
+
+   A custom writer process for streaming data into multiple parquet files.
+
+
+   .. py:method:: buffer_batch_data(group_index, buf: pyarrow.Buffer)
+
+      Buffer the data from the worker processes in RecordBatches.
+
+      If the buffer is large enough, write it to disk.
+
+      :param group_index: The index of the group to write the data to
+      :param buf: The serialized bytes of a RecordBatch received from a worker process
+
+
+
+   .. py:method:: close() -> None
+
+      Close all writers.
+
+
+
+   .. py:attribute:: filename_policy
+
+
+   .. py:method:: flush() -> None
+
+      Flush any remaining data to the writers.
+
+
+
+   .. py:method:: open_writer(group_index: int)
+
+      Open a new writer for the given group index.
+
+      :param group_index: The index of the group to write the data to
+
+
+
+   .. py:attribute:: output_directory
+
+
+   .. py:method:: run()
+
+      Run the writer process.
+
+
+
+   .. py:method:: write_batches(group_index: int, group_data: RecordBatchList) -> None
+
+      Write batches of records to the output file for given `group_index`.
+
+      :param group_index: The index of the group to write the data to
+      :param group_data: The RecordBatchList containing the data to write
+
+

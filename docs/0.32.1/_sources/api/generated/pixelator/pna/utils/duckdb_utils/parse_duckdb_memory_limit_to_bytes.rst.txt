@@ -1,0 +1,16 @@
+pixelator.pna.utils.duckdb_utils.parse_duckdb_memory_limit_to_bytes
+===================================================================
+
+.. py:function:: pixelator.pna.utils.duckdb_utils.parse_duckdb_memory_limit_to_bytes(setting: str) -> int
+
+   Parse a DuckDB ``memory_limit`` setting string to a byte count (floor).
+
+   Handles values returned by ``SELECT current_setting('memory_limit')``, for example
+   ``49.5 GiB`` or ``953.6 MiB``.
+
+   :param setting: Raw setting string from DuckDB.
+
+   :returns: Total limit in bytes (non-negative integer).
+
+   :raises ValueError: If the string does not match DuckDB's expected format.
+

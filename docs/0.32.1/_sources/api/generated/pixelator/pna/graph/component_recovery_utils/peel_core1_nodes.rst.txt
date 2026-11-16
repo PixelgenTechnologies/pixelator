@@ -1,0 +1,29 @@
+pixelator.pna.graph.component_recovery_utils.peel_core1_nodes
+=============================================================
+
+.. py:function:: pixelator.pna.graph.component_recovery_utils.peel_core1_nodes(input_edgelist_path: pathlib.Path, working_dir: pathlib.Path, stats: pixelator.pna.graph.report.GraphStatistics, max_iterations: int | None = None) -> tuple[pathlib.Path, pathlib.Path, pixelator.pna.graph.report.GraphStatistics]
+
+   Peel the core-1 layer off an edgelist iteratively, leaving its 2-core.
+
+   A UMI's core number is 1 if it is not part of the graph's 2-core -- equivalently, if it can
+   be removed by repeatedly deleting whichever UMI currently has degree 1 (leaf pruning) until
+   none remain. Each round removes every currently-degree-1 UMI's edges from the graph and adds
+   them to the discard pile, then repeats on what's left, so a UMI that only becomes a leaf
+   after one of its neighbors was itself pruned away in an earlier round is peeled too, rather
+   than left in the graph. The loop always converges on its own -- each round strictly shrinks
+   the graph, so it must eventually reach a fixed point.
+
+   Removing the core-1 layer before fast label propagation and Leiden lets community detection
+   run on the structurally unambiguous part of the graph: a core-1 UMI has exactly one edge and
+   therefore no ambiguity about which component it belongs to once its single neighbor is
+   resolved. ``absorb_core1_layer`` reattaches this layer once components have been resolved.
+
+   :param input_edgelist_path: Path to the edgelist to peel.
+   :param working_dir: Directory to write intermediate parquet files to.
+   :param stats: Statistics object to update.
+   :param max_iterations: Maximum number of peeling rounds. ``None`` (the default) peels to full
+                          convergence, i.e. the true 2-core.
+
+   :returns: Path to the retained 2-core edgelist, path to the core-1 discard pile (everything peeled,
+             across all rounds), and updated statistics.
+

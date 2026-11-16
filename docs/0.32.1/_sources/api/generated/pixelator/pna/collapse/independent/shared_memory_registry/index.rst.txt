@@ -1,0 +1,33 @@
+pixelator.pna.collapse.independent.shared_memory_registry
+=========================================================
+
+.. py:module:: pixelator.pna.collapse.independent.shared_memory_registry
+
+.. autoapi-nested-parse::
+
+   A registry for shared memory buffers and numpy arrays backed by shared memory.
+
+   SharedMemoryRegistry can register objects by name and stores all information needed
+   to access these objects from different processes.
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/collapse/independent/shared_memory_registry/ArrayDescriptor
+   /api/generated/pixelator/pna/collapse/independent/shared_memory_registry/ReadOnlySharedMemoryRegistry
+   /api/generated/pixelator/pna/collapse/independent/shared_memory_registry/SharedMemoryRegistry
+
+.. autoapisummary::
+
+   pixelator.pna.collapse.independent.shared_memory_registry.ArrayDescriptor
+   pixelator.pna.collapse.independent.shared_memory_registry.ReadOnlySharedMemoryRegistry
+   pixelator.pna.collapse.independent.shared_memory_registry.SharedMemoryRegistry
+
+

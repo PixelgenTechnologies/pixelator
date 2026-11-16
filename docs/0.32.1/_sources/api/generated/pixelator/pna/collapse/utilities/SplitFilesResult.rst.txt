@@ -1,0 +1,22 @@
+pixelator.pna.collapse.utilities.SplitFilesResult
+=================================================
+
+.. py:class:: pixelator.pna.collapse.utilities.SplitFilesResult
+
+   Bases: :py:obj:`NamedTuple`
+
+
+   Tuple with a list per category of collapse input parquet files.
+
+
+   .. py:attribute:: m1
+      :type:  list[pathlib.Path]
+
+
+   .. py:attribute:: m2
+      :type:  list[pathlib.Path]
+
+
+   .. py:attribute:: paired
+      :type:  list[pathlib.Path]
+

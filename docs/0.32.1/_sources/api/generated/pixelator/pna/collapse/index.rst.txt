@@ -1,0 +1,42 @@
+pixelator.pna.collapse
+======================
+
+.. py:module:: pixelator.pna.collapse
+
+.. autoapi-nested-parse::
+
+   Module for collapsing a list of molecules into unique antibody links.
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/pna/collapse/adjacency/index
+   /api/generated/pixelator/pna/collapse/independent/index
+   /api/generated/pixelator/pna/collapse/paired/index
+   /api/generated/pixelator/pna/collapse/report/index
+   /api/generated/pixelator/pna/collapse/statistics/index
+   /api/generated/pixelator/pna/collapse/utilities/index
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/collapse/MoleculeCollapser
+   /api/generated/pixelator/pna/collapse/RegionCollapser
+
+.. autoapisummary::
+
+   pixelator.pna.collapse.MoleculeCollapser
+   pixelator.pna.collapse.RegionCollapser
+
+

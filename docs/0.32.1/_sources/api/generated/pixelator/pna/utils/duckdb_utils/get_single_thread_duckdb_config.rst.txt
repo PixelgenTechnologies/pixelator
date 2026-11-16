@@ -1,0 +1,16 @@
+pixelator.pna.utils.duckdb_utils.get_single_thread_duckdb_config
+================================================================
+
+.. py:function:: pixelator.pna.utils.duckdb_utils.get_single_thread_duckdb_config(n_threads: int) -> dict
+
+   Get a DuckDB configuration that limits memory usage for multi-threaded processing.
+
+   :param n_threads: Number of threads to be used in the multi-threaded processing.
+
+   :returns: DuckDB configuration dictionary with memory limit and single thread setting.
+   :rtype: dict
+
+   :raises ValueError: If ``n_threads`` is invalid.
+   :raises DuckdbPerThreadMemoryError: If the configured memory split would give each thread less than
+       1 MiB.
+

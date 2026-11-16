@@ -1,0 +1,32 @@
+pixelator.pna.amplicon.report
+=============================
+
+.. py:module:: pixelator.pna.amplicon.report
+
+.. autoapi-nested-parse::
+
+   Routines for printing a report.
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/amplicon/report/AmpliconSampleReport
+   /api/generated/pixelator/pna/amplicon/report/AmpliconStatistics
+   /api/generated/pixelator/pna/amplicon/report/BasesCountStatistics
+   /api/generated/pixelator/pna/amplicon/report/Q30Statistics
+
+.. autoapisummary::
+
+   pixelator.pna.amplicon.report.AmpliconSampleReport
+   pixelator.pna.amplicon.report.AmpliconStatistics
+   pixelator.pna.amplicon.report.BasesCountStatistics
+   pixelator.pna.amplicon.report.Q30Statistics
+
+

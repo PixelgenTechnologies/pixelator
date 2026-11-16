@@ -1,0 +1,21 @@
+pixelator.pna.collapse.independent.shared_memory_registry.ArrayDescriptor
+=========================================================================
+
+.. py:class:: pixelator.pna.collapse.independent.shared_memory_registry.ArrayDescriptor
+
+   Descriptor for a shared memory array.
+
+   These attributes are used to recreate a numpy array from a shared memory buffer.
+
+   :ivar shape: The shape of the array.
+   :ivar dtype: The data type of the array.
+
+
+
+   .. py:attribute:: dtype
+      :type:  numpy.typing.DTypeLike
+
+
+   .. py:attribute:: shape
+      :type:  tuple[int] | tuple[int, int]
+

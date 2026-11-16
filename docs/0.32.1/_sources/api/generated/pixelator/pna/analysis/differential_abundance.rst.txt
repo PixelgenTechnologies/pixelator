@@ -1,0 +1,107 @@
+pixelator.pna.analysis.differential_abundance
+=============================================
+
+.. py:function:: pixelator.pna.analysis.differential_abundance(adata: anndata.AnnData, contrast_column: str, reference: str, targets: str | collections.abc.Sequence[str] | None = None, group_vars: str | collections.abc.Sequence[str] | None = None, features: str | collections.abc.Sequence[str] | None = None, layer: str | None = None, p_adjust_method: Literal['bonferroni', 'holm', 'hochberg', 'simes-hochberg', 'hommel', 'BH', 'BY', 'fdr', 'fdr_bh', 'fdr_by', 'sidak', 'benjamini-hochberg'] = 'bonferroni') -> pandas.DataFrame
+
+   Compare marker abundance between a reference group and one or more targets.
+
+   For each ``target`` vs ``reference`` in ``contrast_column``, and optionally
+   within each combination of ``group_vars`` (for example cell type), this
+   calls ``scanpy.tl.rank_genes_groups`` with ``method="wilcoxon"``.
+
+   Effect size is a **mean difference** (``mean(target) - mean(reference)``),
+   not scanpy's log-fold change. Whether the matrix is non-negative is a
+   normalization choice (for PNA, ``clr_transformation(..., non_negative=True)``);
+   this helper tests the values it is given.
+
+   ``pvals_adj`` is computed once across every test this helper runs (all
+   markers × targets × ``group_vars`` strata), replacing scanpy's per-call
+   adjustment.
+
+   For each target vs reference (and each ``group_vars`` stratum):
+
+   1. Restrict to those cells and to ``features`` if given.
+   2. Compute ``difference`` as ``mean(target) - mean(reference)`` and
+      ``pct_nz_group`` / ``pct_nz_reference`` as the fraction of cells with
+      value ``> 0``.
+   3. Call ``scanpy.tl.rank_genes_groups(..., method="wilcoxon")``. Keep the
+      raw p-values; discard scanpy's log-fold changes and its per-call
+      p-adjustment.
+
+   :param adata: AnnData of components × markers. ``contrast_column`` and any
+                 ``group_vars`` must be columns of ``adata.obs``.
+   :param contrast_column: ``obs`` column that defines the contrast. Passed to
+                           scanpy as ``groupby``.
+   :param reference: Reference level of ``contrast_column``. Passed to scanpy as
+                     ``reference``.
+   :param targets: Target level(s) of ``contrast_column`` to compare against
+                   ``reference``. If ``None``, every other level is used. Passed to
+                   scanpy as ``groups``.
+   :param group_vars: Optional ``obs`` column(s) that split the data before each
+                      contrast (for example ``"cell_type"``). Each combination is tested
+                      separately and the grouping values are added as columns on the
+                      result.
+   :param features: Optional marker names to test. Default is all markers in
+                    ``adata.var_names``.
+   :param layer: Matrix to test. ``None`` uses ``adata.X``. Otherwise the name is
+                 looked up in ``adata.layers``, then ``adata.obsm`` (PNA CLR is
+                 stored in ``adata.obsm["clr"]`` by default). Passed to scanpy as
+                 ``layer``.
+   :param p_adjust_method: Multiple-testing method applied to the collected raw
+                           p-values. Accepted names include ``bonferroni``, ``holm``,
+                           ``hochberg``, ``hommel``, ``BH``, ``BY``, ``fdr``, ``fdr_bh``,
+                           ``fdr_by``, ``sidak``, and ``simes-hochberg``. ``hochberg`` maps
+                           to statsmodels ``simes-hochberg``. Defaults to ``"bonferroni"``.
+
+   :returns: A DataFrame with one row per marker and contrast (and ``group_vars``
+             stratum, if any). Column names follow
+             ``scanpy.get.rank_genes_groups_df`` where they overlap. Columns:
+
+             * ``marker`` — marker name
+             * ``pvals`` — Wilcoxon p-value from ``scanpy.tl.rank_genes_groups``
+             * ``pvals_adj`` — adjusted p-value (see above). Non-finite raw
+               p-values are left as NaN and excluded from the adjustment.
+             * ``difference`` — mean(target) − mean(reference) on the selected
+               matrix
+             * ``pct_nz_group`` — fraction of target cells with value ``> 0``
+             * ``pct_nz_reference`` — fraction of reference cells with value
+               ``> 0``
+             * ``target``, ``reference``
+             * one column per ``group_vars`` entry, when given
+
+   :raises ValueError: If ``contrast_column`` / ``group_vars`` / ``layer`` /
+       ``features`` / ``reference`` / ``targets`` / ``p_adjust_method``
+       are invalid, or if no target-vs-reference comparison can be run.
+
+   .. rubric:: Examples
+
+   Load a PNA dataset and compare stimulated vs resting cells on the
+   default CLR matrix, separately within each cell type::
+
+       from pixelator.pna.analysis import differential_abundance
+       from pixelator.pna.pixeldataset import read
+
+       adata = read("sample.pxl").adata()
+       da = differential_abundance(
+           adata,
+           contrast_column="condition",
+           reference="resting",
+           targets="stimulated",
+           group_vars="cell_type",
+           layer="clr",
+       )
+       da.sort_values("pvals_adj").head()
+
+   Restrict to one cell type first if you do not want ``group_vars``::
+
+       cd8 = adata[adata.obs["cell_type"] == "CD8 T"]
+       da_cd8 = differential_abundance(
+           cd8,
+           contrast_column="condition",
+           reference="resting",
+           targets="stimulated",
+           layer="clr",
+       )
+
+   .. seealso:: ``scanpy.tl.rank_genes_groups`` (Wilcoxon) is the test used here.
+

@@ -1,0 +1,26 @@
+pixelator.pna.pixeldataset.io.anndata_helper
+============================================
+
+.. py:module:: pixelator.pna.pixeldataset.io.anndata_helper
+
+.. autoapi-nested-parse::
+
+   Helper functions for materializing AnnData objects from PXL files.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/pixeldataset/io/anndata_helper/AnnDataHelper
+
+.. autoapisummary::
+
+   pixelator.pna.pixeldataset.io.anndata_helper.AnnDataHelper
+
+

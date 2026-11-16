@@ -1,0 +1,37 @@
+pixelator.pna.analysis.graph_noise_analysis.non_backtracking_transition_probabilities
+=====================================================================================
+
+.. py:function:: pixelator.pna.analysis.graph_noise_analysis.non_backtracking_transition_probabilities(graph: networkx.Graph, n_steps: int = 3, cumulative: bool = True, deadend_action: DeadendOptions = 'ignore', track_only_nonzero: bool = True) -> pandas.Series
+
+   Calculate the non-backtracking transition probabilities for an n_steps walk.
+
+   A non-backtracking random walker can only transition on edges that are not the same as the
+   edge it came from. The non-backtracking transition probabilities can be
+   useful for identifying spurious edges in a graph. For example, a non-zero probability for
+   a 3-step non-backtracking walk between two nodes i and j (connected by an edge) indicates
+   that there is at least one path of length 3 connecting i and j. This can be an indication that
+   i and j are located in the same neighborhood. If the probability is zero, there is no path of
+   length 3 between i and j which is an indication that i and j are located in different
+   neighborhoods.
+   In the latter case, the edge between i and j is potentially spurious.
+
+   One limitation with this method is that edges located in sparse regions of the graph often
+   have zero probabilities. For example, when transitioning from i to j, if the end node j has
+   a degree of 1, there are no paths of length > 1 and the probability will be zero for a k>1
+   step non-backtracking walk. However, this is not an indication that i and j are located in
+   different neighborhoods.
+
+   :param graph: a networkx graph object.
+   :param n_steps: the number of steps to take for the random walk.
+   :param cumulative: if True, calculate the cumulative transition probabilities for all steps up to
+                      n_steps.
+   :param deadend_action: (the action to take for deadend nodes. Options are): "remove", "ignore",
+                          "self-loop".
+   :param track_only_nonzero: if True, only track edges with non-zero probabilities without keeping
+                              the actual probablity.
+
+   :returns: a pandas series containing the transition probabilities.
+
+   :raises ValueError: if the deadend_action is not one of the valid options.
+   :raises ValueError: if the number of steps is less than 3.
+

@@ -1,0 +1,28 @@
+pixelator.pna.amplicon.process.amplicon_fastq
+=============================================
+
+.. py:function:: pixelator.pna.amplicon.process.amplicon_fastq(inputs: Sequence[pathlib.Path], assay: pixelator.pna.config.assay.PNAAssay, output: pathlib.Path, mismatches: float = 0.1, poly_g_trimming: bool = False, quality_cutoff: int = 20, low_complexity_filter: bool = True, low_complexity_threshold: float = 0.8, lbs_filter: bool = True, lbs_filter_min_overlap: int = 8, lbs_filter_error_rate: float = 0.1, threads: int = -1, save_failed: bool = False) -> pixelator.pna.amplicon.report.AmpliconStatistics
+
+   Output a FASTQ file with amplicon sequences.
+
+   This function will take paired-end reads and combine them into the proper amplicon
+   sequences based on the assay design. The reads will be quality trimmed and filtered.
+
+   :param inputs: The input files to process
+   :param assay: The assay design to use
+   :param output: The output file to write
+   :param mismatches: The number of mismatches to allow
+   :param poly_g_trimming: Whether to perform poly-G trimming
+   :param quality_cutoff: The quality cutoff to use for quality trimming read tails
+   :param low_complexity_filter: Whether to filter reads with low complexity UMIs
+   :param low_complexity_threshold: The percentage of the UMI that must consists of a single base to
+                                    be considered of low complexity.
+   :param lbs_filter: Whether to filter reads with LBS detected in the UMI regions
+   :param lbs_filter_min_overlap: The minimum overlap to use for LBS detection in UMI regions
+   :param lbs_filter_error_rate: The maximum error rate to allow when determining overlap with the LBS
+                                 sequence in UMI regions,
+   :param threads: The number of cores to use. -1 will use all available cores
+   :param save_failed: Whether to save reads that fail during amplicon combining to a separate file
+
+   :returns: An `AmpliconStatistics` instance.
+

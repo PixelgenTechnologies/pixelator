@@ -1,0 +1,28 @@
+pixelator.pna.plot.comparison
+=============================
+
+.. py:module:: pixelator.pna.plot.comparison
+
+.. autoapi-nested-parse::
+
+   Plots and HTML reports for comparing abundance/proximity similarity between sample pairs.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/plot/comparison/plot_sample_pair_comparison
+   /api/generated/pixelator/pna/plot/comparison/write_sample_pair_comparison_report
+
+.. autoapisummary::
+
+   pixelator.pna.plot.comparison.plot_sample_pair_comparison
+   pixelator.pna.plot.comparison.write_sample_pair_comparison_report
+
+

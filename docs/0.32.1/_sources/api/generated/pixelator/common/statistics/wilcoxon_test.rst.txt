@@ -1,0 +1,15 @@
+pixelator.common.statistics.wilcoxon_test
+=========================================
+
+.. py:function:: pixelator.common.statistics.wilcoxon_test(df: pandas.DataFrame, reference: str, target: str, contrast_column: str, value_column: str) -> pandas.Series
+
+   Perform a Wilcoxon rank-sum test between two groups.
+
+   :param df: The dataframe containing the data.
+   :param reference: Name of the reference group in the contrast column.
+   :param target: Name of the target group in the contrast column.
+   :param contrast_column: Name of the column containing the group information.
+   :param value_column: Name of the column containing the values to compare.
+
+   :returns: A series containing the test statistic, p-value, and median difference.
+

@@ -1,0 +1,19 @@
+pixelator.pna.graph.component_recovery_utils.save_new_working_edgelist
+======================================================================
+
+.. py:function:: pixelator.pna.graph.component_recovery_utils.save_new_working_edgelist(input_working_edgelist_path: pathlib.Path, new_assignments_path: pathlib.Path, component_column_name: str, working_dir: pathlib.Path = DEFAULT_WORKING_DIR) -> tuple[pathlib.Path, dict[str, int]]
+
+   Save a new working edgelist with updated component assignments.
+
+   This function reads a working edgelist and new component assignments from Parquet files,
+   merges them to update the component assignments in the edgelist, and saves the resulting
+   edgelist under ``working_dir``. It also computes statistics about crossing vs remaining edges.
+
+   :param input_working_edgelist_path: Path to the input working edgelist Parquet file.
+   :param new_assignments_path: Path to the Parquet file containing new component assignments.
+   :param component_column_name: Name of the component column in the assignments file.
+   :param working_dir: Output directory; defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
+
+   :returns: Path to the updated edgelist and a dict with ``n_crossing_edges`` and
+             ``n_remaining_edges``.
+

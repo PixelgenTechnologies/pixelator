@@ -1,0 +1,10 @@
+pixelator.pna.config.panel.tables.stored_panel_marker_columns
+=============================================================
+
+.. py:function:: pixelator.pna.config.panel.tables.stored_panel_marker_columns(connection: duckdb.DuckDBPyConnection) -> set[str]
+
+   Return the marker columns stored in ``panels``.
+
+   Empty when the panel tables are absent. ``row_nr``, ``source_id``, and
+   ``marker_id`` are storage columns, not marker fields.
+

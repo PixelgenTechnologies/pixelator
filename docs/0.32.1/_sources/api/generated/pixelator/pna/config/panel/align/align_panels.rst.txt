@@ -1,0 +1,36 @@
+pixelator.pna.config.panel.align.align_panels
+=============================================
+
+.. py:function:: pixelator.pna.config.panel.align.align_panels(panels: Sequence[pixelator.pna.config.panel.antibody_panel.PNAAntibodyPanel], force: bool = False) -> PanelAlignment
+
+   Align panels whose shared sources are different patches of one another.
+
+   Panels may contain different sources. A base panel with add-on A and a base
+   panel with add-on B align into base plus A plus B, with the base at its
+   newest patch. Sources are matched on their product (their name when they
+   have none).
+
+   Markers are matched on their sequence pair, so a marker that was renamed in
+   a newer patch is still recognised. Each pair maps to the row of the newest
+   version that contains it. Versions are only compared within a product.
+   Sources of different products, and sources of one product with the same
+   version, are ordered as they come in ``panels``, and the last one wins.
+
+   Two kinds of conflict are rejected, because merging them would silently mix
+   different markers:
+
+   - one marker id with more than one sequence pair
+   - one sequence pair with different marker ids in sources of different
+     products
+
+   :param panels: The panels to align, for example one per pxl file.
+   :param force: Log the conflicts as a warning instead of raising. Conflicting
+                 markers are then matched on their sequence pair.
+
+   :returns: The alignment of all the panels.
+
+   :raises PanelConflictError: When the panels have conflicting markers and
+       ``force`` is not set.
+   :raises ValueError: When no panel is given, or when sources of the same product
+       have different major or minor versions.
+

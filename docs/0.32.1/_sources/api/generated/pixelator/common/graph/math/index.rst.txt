@@ -1,0 +1,26 @@
+pixelator.common.graph.math
+===========================
+
+.. py:module:: pixelator.common.graph.math
+
+.. autoapi-nested-parse::
+
+   Graph math utilities.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/graph/math/mat_pow
+
+.. autoapisummary::
+
+   pixelator.common.graph.math.mat_pow
+
+

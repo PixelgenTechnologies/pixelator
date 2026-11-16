@@ -1,0 +1,38 @@
+pixelator.pna.pixeldataset.legacy
+=================================
+
+.. py:module:: pixelator.pna.pixeldataset.legacy
+
+.. autoapi-nested-parse::
+
+   Patches that make older ``.pxl`` files look like the current schema.
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/pna/pixeldataset/legacy/marker_columns/index
+   /api/generated/pixelator/pna/pixeldataset/legacy/panel/index
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/pixeldataset/legacy/LegacyMarkerQueryAdapter
+   /api/generated/pixelator/pna/pixeldataset/legacy/LegacyPanelAdapter
+
+.. autoapisummary::
+
+   pixelator.pna.pixeldataset.legacy.LegacyMarkerQueryAdapter
+   pixelator.pna.pixeldataset.legacy.LegacyPanelAdapter
+
+

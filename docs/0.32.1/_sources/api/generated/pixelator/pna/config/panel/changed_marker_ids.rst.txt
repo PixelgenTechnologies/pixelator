@@ -1,0 +1,15 @@
+pixelator.pna.config.panel.changed_marker_ids
+=============================================
+
+.. py:function:: pixelator.pna.config.panel.changed_marker_ids(old: pixelator.pna.config.panel.antibody_panel.PNAAntibodyPanel, new: pixelator.pna.config.panel.antibody_panel.PNAAntibodyPanel) -> dict[str, str]
+
+   Return ``old marker_id -> new marker_id`` for markers whose id changed.
+
+   Markers are matched on their sequences. Markers present in only one panel
+   are ignored. Each panel must have exactly one source.
+
+   :param old: The panel before the change.
+   :param new: The panel after the change.
+
+   :raises ValueError: When either panel does not have exactly one source.
+

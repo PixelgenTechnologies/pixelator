@@ -1,0 +1,26 @@
+pixelator.pna.pixeldataset.config
+=================================
+
+.. py:module:: pixelator.pna.pixeldataset.config
+
+.. autoapi-nested-parse::
+
+   Configuration objects for PNA pixel datasets.
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/pixeldataset/config/PixelDatasetConfig
+
+.. autoapisummary::
+
+   pixelator.pna.pixeldataset.config.PixelDatasetConfig
+
+

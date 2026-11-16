@@ -1,0 +1,36 @@
+pixelator.pna.sample_calling.report.SampleCallingTotalReport
+============================================================
+
+.. py:class:: pixelator.pna.sample_calling.report.SampleCallingTotalReport(/, **data: Any)
+
+   Bases: :py:obj:`pixelator.pna.report.models.base.SampleReport`
+
+
+   Model for report data for all samples returned by the single-cell sample-calling stage.
+
+
+   .. py:attribute:: hash_enrichment_factors_per_sample
+      :type:  dict[str, list[float]]
+
+
+   .. py:attribute:: input_reads
+      :type:  int
+
+
+   .. py:attribute:: number_of_components
+      :type:  int
+
+
+   .. py:attribute:: output_reads
+      :type:  int
+
+
+   .. py:attribute:: percentage_of_components_successfully_called
+      :type:  float
+
+
+   .. py:attribute:: report_type
+      :type:  str
+      :value: 'sample_calling_total'
+
+

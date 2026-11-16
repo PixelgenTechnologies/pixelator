@@ -1,0 +1,28 @@
+pixelator.pna.sample_calling.report
+===================================
+
+.. py:module:: pixelator.pna.sample_calling.report
+
+.. autoapi-nested-parse::
+
+   Plugin for sample-calling report format.
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/sample_calling/report/SampleCallingSampleReport
+   /api/generated/pixelator/pna/sample_calling/report/SampleCallingTotalReport
+
+.. autoapisummary::
+
+   pixelator.pna.sample_calling.report.SampleCallingSampleReport
+   pixelator.pna.sample_calling.report.SampleCallingTotalReport
+
+

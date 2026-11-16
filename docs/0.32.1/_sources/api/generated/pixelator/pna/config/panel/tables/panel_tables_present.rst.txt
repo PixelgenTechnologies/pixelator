@@ -1,0 +1,7 @@
+pixelator.pna.config.panel.tables.panel_tables_present
+======================================================
+
+.. py:function:: pixelator.pna.config.panel.tables.panel_tables_present(connection: duckdb.DuckDBPyConnection) -> bool
+
+   Return whether both panel tables exist on this connection.
+

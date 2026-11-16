@@ -1,0 +1,42 @@
+pixelator.testing.write_pna_fastq
+=================================
+
+.. py:function:: pixelator.testing.write_pna_fastq(sample_name: str, n_reads: int, edgelist: polars.DataFrame, panel: pixelator.pna.config.panel.PNAAntibodyPanel, assay: pixelator.pna.config.assay.PNAAssay, substitution_error_rate: float = 1e-05, read1_length: int = 70, read2_length: int = 90, output_dir: str | pathlib.Path = '.', rng=None, quality_std: float = 2.0) -> tuple[pathlib.Path, pathlib.Path]
+
+   Convert a populated edge list into reads and write paired-end fastq files.
+
+   Reads are sampled from ``edgelist`` one edge at a time: ``n_reads`` row
+   indices are drawn uniformly at random *with replacement*, so the number of
+   reads is independent of the number of edges. An edge may be picked many
+   times or not at all, and its read depth is random rather than tied to its
+   ``read_count`` (that column is not used as a sampling weight). Every edge is
+   eligible, including the crossing/chimeric edges produced by
+   :func:`~pixelator.testing.molecules.generate_edgelist`, so background chimeras appear in the reads.
+
+   Each sampled edge becomes one amplicon, assembled by concatenating, in
+   order: the first umi, the first marker's pid sequence (``sequence_1``), the
+   ``lbs-1`` linker, a unique event identifier (uei), the ``lbs-2`` linker, the
+   second marker's pid sequence (``sequence_2``) and the second umi. The two
+   umis and the uei are 2-bit-encoded integers decoded back to dna; the uei is
+   drawn once per edge, so reads coming from the same edge share it. Per-base
+   sequencing errors are then applied at ``substitution_error_rate``, and the
+   amplicon is split into a mate pair (R1 from the start, R2 the reverse
+   complement of the end).
+
+   :param sample_name: base name for the output ``<sample_name>_R1/2.fastq.gz`` files.
+   :param n_reads: number of reads to sample.
+   :param edgelist: populated edge list with umi/marker columns for both endpoints.
+   :param panel: antibody panel providing the marker sequences.
+   :param assay: assay describing the read structure (region lengths and sequences).
+   :param substitution_error_rate: per-base probability of substituting a base for a
+                                   different (random) one.
+   :param read1_length: length of the forward (R1) read, taken from the amplicon start.
+   :param read2_length: length of the reverse (R2) read, reverse-complemented from the
+                        amplicon end.
+   :param output_dir: directory to write the fastq files into.
+   :param rng: a seed or numpy Generator for the random number generator.
+   :param quality_std: standard deviation of the per-base quality scores around
+                       Q30. ``0`` writes a constant Q30, which compresses much better.
+
+   :returns: The paths of the written ``R1`` and ``R2`` fastq files.
+

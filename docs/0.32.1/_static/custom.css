@@ -1,0 +1,39 @@
+/* Wider main content column */
+/* .bd-main .bd-content .bd-article-container {
+    max-width: 75em;
+} */
+
+/* Optional: allow the whole page layout to grow too */
+/* .bd-page-width {
+    max-width: 100rem;
+} */
+
+/* Wrap */
+
+.bd-content h1 {
+    overflow-wrap: anywhere;
+}
+
+.prev-next-area a {
+    overflow-x: visible;
+}
+
+.prev-next-area a .prev-next-info {
+    min-width: 0;
+}
+
+.prev-next-area a p.prev-next-title {
+    overflow-wrap: anywhere;
+}
+
+span.pre {
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+/* Except */
+
+nav.page-toc span.pre {
+    white-space: pre;
+    overflow-wrap: normal;
+}

@@ -1,0 +1,11 @@
+pixelator.pna.analysis_engine.with_logging
+==========================================
+
+.. py:function:: pixelator.pna.analysis_engine.with_logging(f)
+
+   Add logging to a function with this decorator.
+
+   This is necessary to deal with the fact that for out of process workers
+   like the ones used by joblib we need to set up logging in each worker.
+   This decorator makes this slightly easier.
+

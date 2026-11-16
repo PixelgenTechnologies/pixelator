@@ -1,0 +1,66 @@
+pixelator.pna.amplicon.build_amplicon
+=====================================
+
+.. py:module:: pixelator.pna.amplicon.build_amplicon
+
+.. autoapi-nested-parse::
+
+   Build an amplicon from paired-end reads.
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.amplicon.build_amplicon.BytesOrString
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/amplicon/build_amplicon/Amplicon
+   /api/generated/pixelator/pna/amplicon/build_amplicon/AmpliconBuilder
+   /api/generated/pixelator/pna/amplicon/build_amplicon/AmpliconBuilderFailureReason
+   /api/generated/pixelator/pna/amplicon/build_amplicon/AmpliconBuilderStatistics
+   /api/generated/pixelator/pna/amplicon/build_amplicon/AmpliconCombiner
+   /api/generated/pixelator/pna/amplicon/build_amplicon/AmpliconRegionSlices
+   /api/generated/pixelator/pna/amplicon/build_amplicon/PairedEndAmpliconBuilder
+   /api/generated/pixelator/pna/amplicon/build_amplicon/SingleEndAmpliconBuilder
+
+.. autoapisummary::
+
+   pixelator.pna.amplicon.build_amplicon.Amplicon
+   pixelator.pna.amplicon.build_amplicon.AmpliconBuilder
+   pixelator.pna.amplicon.build_amplicon.AmpliconBuilderFailureReason
+   pixelator.pna.amplicon.build_amplicon.AmpliconBuilderStatistics
+   pixelator.pna.amplicon.build_amplicon.AmpliconCombiner
+   pixelator.pna.amplicon.build_amplicon.AmpliconRegionSlices
+   pixelator.pna.amplicon.build_amplicon.PairedEndAmpliconBuilder
+   pixelator.pna.amplicon.build_amplicon.SingleEndAmpliconBuilder
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/amplicon/build_amplicon/reverse_complement
+
+.. autoapisummary::
+
+   pixelator.pna.amplicon.build_amplicon.reverse_complement
+
+
+Module Contents
+---------------
+
+.. py:data:: BytesOrString
+

@@ -1,0 +1,60 @@
+pixelator.pna.utils.utils
+=========================
+
+.. py:module:: pixelator.pna.utils.utils
+
+.. autoapi-nested-parse::
+
+   Utility functions.
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.utils.utils.R1_REGEX
+   pixelator.pna.utils.utils.R2_REGEX
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/utils/utils/clean_suffixes
+   /api/generated/pixelator/pna/utils/utils/get_demux_filename_info
+   /api/generated/pixelator/pna/utils/utils/get_read_sample_name
+   /api/generated/pixelator/pna/utils/utils/init_duckdb_conn
+   /api/generated/pixelator/pna/utils/utils/is_read_file
+   /api/generated/pixelator/pna/utils/utils/normalize_input_to_list
+   /api/generated/pixelator/pna/utils/utils/normalize_input_to_set
+   /api/generated/pixelator/pna/utils/utils/timer
+
+.. autoapisummary::
+
+   pixelator.pna.utils.utils.clean_suffixes
+   pixelator.pna.utils.utils.get_demux_filename_info
+   pixelator.pna.utils.utils.get_read_sample_name
+   pixelator.pna.utils.utils.init_duckdb_conn
+   pixelator.pna.utils.utils.is_read_file
+   pixelator.pna.utils.utils.normalize_input_to_list
+   pixelator.pna.utils.utils.normalize_input_to_set
+   pixelator.pna.utils.utils.timer
+
+
+Module Contents
+---------------
+
+.. py:data:: R1_REGEX
+   :value: '(.[Rr]1$)|(_[Rr]?1$)|(_[Rr]?1)(?P<suffix>_[0-9]{3})$'
+
+
+.. py:data:: R2_REGEX
+   :value: '(.[Rr]2$)|(_[Rr]?2$)|(_[Rr]?2)(?P<suffix>_[0-9]{3})$'
+
+

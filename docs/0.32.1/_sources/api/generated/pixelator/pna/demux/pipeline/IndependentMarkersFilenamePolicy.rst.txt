@@ -1,0 +1,28 @@
+pixelator.pna.demux.pipeline.IndependentMarkersFilenamePolicy
+=============================================================
+
+.. py:class:: pixelator.pna.demux.pipeline.IndependentMarkersFilenamePolicy(prefix: str, m1_map: dict[str, int], m2_map: dict[str, int])
+
+   Bases: :py:obj:`DemuxFilenamePolicy`
+
+
+   A filename policy for creating demux output files.
+
+   The flat space of group_index is split into two parts,
+   one for marker1 and one for marker2.
+
+   Small marker groups can still be binned together, so the
+   number of files is not equal to twice the number of markers
+   in a panel.
+
+
+   .. py:method:: get_filename(group_index: int) -> str
+
+      Return the filename for the given group index.
+
+      :param group_index: The index of the group to write the data to
+
+
+
+   .. py:attribute:: prefix
+

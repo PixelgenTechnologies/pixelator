@@ -1,0 +1,21 @@
+pixelator.pna.pixeldataset.io.panel_alignment.ViewAlignment
+===========================================================
+
+.. py:class:: pixelator.pna.pixeldataset.io.panel_alignment.ViewAlignment
+
+   How the markers of the files in a view are aligned.
+
+   :ivar renames: For each sample that needs it, ``stored marker id -> aligned
+                  marker id``.
+   :ivar panel_rows: The aligned panel row of every marker, by its aligned marker
+                     id. Empty when the files were not aligned.
+
+
+
+   .. py:attribute:: panel_rows
+      :type:  dict[str, dict[str, Any]]
+
+
+   .. py:attribute:: renames
+      :type:  dict[str, dict[str, str]]
+

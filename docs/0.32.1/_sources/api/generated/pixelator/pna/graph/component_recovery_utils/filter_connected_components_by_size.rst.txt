@@ -1,0 +1,28 @@
+pixelator.pna.graph.component_recovery_utils.filter_connected_components_by_size
+================================================================================
+
+.. py:function:: pixelator.pna.graph.component_recovery_utils.filter_connected_components_by_size(input_edgelist_path: pathlib.Path, component_size_threshold: bool | tuple[int, int], discard_sizes: polars.DataFrame, component_stats: pixelator.pna.graph.report.GraphStatistics, dynamic_lowest_passable_bound=None, working_dir: pathlib.Path = DEFAULT_WORKING_DIR) -> tuple[pathlib.Path, pixelator.pna.graph.report.GraphStatistics]
+
+   Filter connected components by size and get statistics.
+
+   This function filters connected components in an edgelist based on their sizes. It computes the
+   sizes of each component,
+   applies size thresholds (either dynamic or hard thresholds), and filters out components that do
+   not meet the criteria.
+   It also updates the component statistics with information about the filtering process.
+
+   :param input_edgelist_path: Path to the input parquet edgelist.
+   :param component_size_threshold: Size threshold for filtering components. If True, dynamic
+                                    thresholds are used. If False, no filtering is applied. If a tuple, it specifies
+                                    (min_size, max_size) for hard thresholds.
+   :param discard_sizes: DataFrame containing sizes of discarded components.
+   :param component_stats: Statistics object to update with filtering information.
+   :param dynamic_lowest_passable_bound: Lowest passable bound for dynamic thresholding. Defaults to
+                                         None.
+   :param working_dir: Directory for temporary parquet output.
+
+   :returns: A tuple of the path to the filtered parquet edgelist and the updated
+             component statistics.
+
+   :raises ConnectedComponentException: If no components remain after filtering.
+

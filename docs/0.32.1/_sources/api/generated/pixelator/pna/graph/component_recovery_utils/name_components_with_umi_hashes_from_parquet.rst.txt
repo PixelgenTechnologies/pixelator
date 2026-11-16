@@ -1,0 +1,7 @@
+pixelator.pna.graph.component_recovery_utils.name_components_with_umi_hashes_from_parquet
+=========================================================================================
+
+.. py:function:: pixelator.pna.graph.component_recovery_utils.name_components_with_umi_hashes_from_parquet(input_edgelist_path: pathlib.Path, working_dir: pathlib.Path = DEFAULT_WORKING_DIR) -> pathlib.Path
+
+   Rewrite component ids to deterministic UMI-based hashes and write parquet.
+

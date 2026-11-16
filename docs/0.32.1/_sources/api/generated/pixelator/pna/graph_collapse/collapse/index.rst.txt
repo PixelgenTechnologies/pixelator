@@ -1,0 +1,68 @@
+pixelator.pna.graph_collapse.collapse
+=====================================
+
+.. py:module:: pixelator.pna.graph_collapse.collapse
+
+.. autoapi-nested-parse::
+
+   Graph-collapse: rename likely UMI sequencing errors on low-degree nodes, per component.
+
+   A UMI sequencing error is unlikely to recur, so an erroneous UMI typically shows up as a
+   leaf in its component's graph. The Rust binding ``pixelator_core.graph_collapse``
+   searches every node whose degree is at most ``max_degree`` (leaves by default) and finds,
+   for each, the nearest UMI on the same side within a Hamming-distance cutoff,
+   and returns ``(original, corrected)`` UMIs. It does not know markers. Three SQL
+   statements finish the job: drop pairs whose markers differ, rename the remaining
+   original UMIs, then merge edges that are identical after that rename.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.graph_collapse.collapse.logger
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/graph_collapse/collapse/GraphCollapseResult
+
+.. autoapisummary::
+
+   pixelator.pna.graph_collapse.collapse.GraphCollapseResult
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/graph_collapse/collapse/collapse_identical_edges
+   /api/generated/pixelator/pna/graph_collapse/collapse/decode_umi
+   /api/generated/pixelator/pna/graph_collapse/collapse/drop_renames_with_different_markers
+   /api/generated/pixelator/pna/graph_collapse/collapse/rename_umis
+   /api/generated/pixelator/pna/graph_collapse/collapse/run_graph_collapse
+
+.. autoapisummary::
+
+   pixelator.pna.graph_collapse.collapse.collapse_identical_edges
+   pixelator.pna.graph_collapse.collapse.decode_umi
+   pixelator.pna.graph_collapse.collapse.drop_renames_with_different_markers
+   pixelator.pna.graph_collapse.collapse.rename_umis
+   pixelator.pna.graph_collapse.collapse.run_graph_collapse
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+

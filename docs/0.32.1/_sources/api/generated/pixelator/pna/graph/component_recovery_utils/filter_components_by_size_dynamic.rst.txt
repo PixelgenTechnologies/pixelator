@@ -1,0 +1,12 @@
+pixelator.pna.graph.component_recovery_utils.filter_components_by_size_dynamic
+==============================================================================
+
+.. py:function:: pixelator.pna.graph.component_recovery_utils.filter_components_by_size_dynamic(component_sizes: polars.DataFrame, lowest_passable_bound: int | None = MIN_PNA_COMPONENT_SIZE) -> tuple[polars.Series, int | None]
+
+   Filter components by size using dynamic thresholds.
+
+   :param component_sizes: DataFrame with columns `component` and `n_umi`.
+   :param lowest_passable_bound: Lowest passable bound.
+
+   :returns: Components that pass the filter, and the computed lower bound.
+

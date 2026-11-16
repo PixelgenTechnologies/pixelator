@@ -1,0 +1,7 @@
+pixelator.common.utils.get_pool_executor
+========================================
+
+.. py:function:: pixelator.common.utils.get_pool_executor(nbr_cores=None, logging_setup=None, context='spawn', **kwargs) -> multiprocessing.pool.Pool
+
+   Return a Pool with some default settings.
+

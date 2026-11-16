@@ -1,0 +1,10 @@
+pixelator.pna.utils.unpack_2bits
+================================
+
+.. py:function:: pixelator.pna.utils.unpack_2bits(packed: int, k: int) -> bytes
+
+   Unpack a kmer from an integer using two bits per nucleotides.
+
+   :param packed: the packed kmer as an integer
+   :param k: the length of the kmer
+

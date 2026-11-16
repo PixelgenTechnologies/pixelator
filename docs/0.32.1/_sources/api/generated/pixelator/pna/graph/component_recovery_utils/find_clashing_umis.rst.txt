@@ -1,0 +1,19 @@
+pixelator.pna.graph.component_recovery_utils.find_clashing_umis
+===============================================================
+
+.. py:function:: pixelator.pna.graph.component_recovery_utils.find_clashing_umis(input_file: pathlib.Path, component_stats: pixelator.pna.graph.report.GraphStatistics) -> tuple[polars.Series, pixelator.pna.graph.report.GraphStatistics]
+
+   Identify and save clashing Unique Molecular Identifiers (UMIs) from an input Parquet file.
+
+   This function processes an edgelist stored in a Parquet file, where each row contains
+   `umi1`, `umi2`, `marker_1`, and `marker_2`. It identifies UMIs that:
+   1. Appear as `umi1` associated with multiple `marker_1` values.
+   2. Appear as `umi2` associated with multiple `marker_2` values.
+   3. Are present in both `umi1` and `umi2`.
+
+   :param input_file: Path to the input Parquet file containing the edgelist.
+   :param component_stats: Statistics object to update with clash information.
+
+   :returns: A tuple containing a Polars Series of clashing UMIs and the updated
+             component statistics.
+

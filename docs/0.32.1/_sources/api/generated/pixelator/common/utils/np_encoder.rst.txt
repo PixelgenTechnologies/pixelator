@@ -1,0 +1,7 @@
+pixelator.common.utils.np_encoder
+=================================
+
+.. py:function:: pixelator.common.utils.np_encoder(object: Any)
+
+   Encoder for JSON serialization of numpy data types.
+

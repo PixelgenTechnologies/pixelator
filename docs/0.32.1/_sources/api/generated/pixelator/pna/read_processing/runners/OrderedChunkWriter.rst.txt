@@ -1,0 +1,26 @@
+pixelator.pna.read_processing.runners.OrderedChunkWriter
+========================================================
+
+.. py:class:: pixelator.pna.read_processing.runners.OrderedChunkWriter(outfile)
+
+   Reorder output chunks according to input order.
+
+   We may receive chunks of processed data from worker processes
+   in any order. This class writes them to an output file in
+   the correct order.
+
+
+   .. py:method:: write(data: bytes, index: int)
+
+      Write a chunk of data to the output handler.
+
+      :param data: The data to write.
+      :param index: An integer indicating the order of the data.
+
+
+
+   .. py:method:: wrote_everything()
+
+      Return True if all chunks have been written.
+
+

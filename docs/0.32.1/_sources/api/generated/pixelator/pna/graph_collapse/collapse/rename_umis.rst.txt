@@ -1,0 +1,9 @@
+pixelator.pna.graph_collapse.collapse.rename_umis
+=================================================
+
+.. py:function:: pixelator.pna.graph_collapse.collapse.rename_umis(con: duckdb.DuckDBPyConnection) -> None
+
+   Replace each remaining original UMI with its corrected UMI, on both ends.
+
+   :param con: Connection with an ``edgelist`` table and a ``_renames`` table.
+

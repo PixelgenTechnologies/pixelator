@@ -1,0 +1,83 @@
+pixelator.pna.demux.report.DemuxSampleReport
+============================================
+
+.. py:class:: pixelator.pna.demux.report.DemuxSampleReport(/, **data: Any)
+
+   Bases: :py:obj:`pixelator.pna.report.models.SampleReport`
+
+
+   Model for a demux sample report.
+
+
+   .. py:attribute:: failed_reads
+      :type:  int
+      :value: None
+
+
+
+   .. py:property:: fraction_failed_reads
+      :type: float
+
+
+      Calculate the fraction of reads that were discarded by the demux step.
+
+
+   .. py:attribute:: input_reads
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: invalid_pid1_pid2_reads
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: invalid_pid1_reads
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: invalid_pid2_reads
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: output_corrected_reads
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: output_exact_reads
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: output_reads
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: pid1_matches_distance_distribution
+      :type:  dict[int, int]
+      :value: None
+
+
+
+   .. py:attribute:: pid2_matches_distance_distribution
+      :type:  dict[int, int]
+      :value: None
+
+
+
+   .. py:attribute:: pid_group_sizes
+      :type:  list[tuple[str, str, int]]
+      :value: None
+
+

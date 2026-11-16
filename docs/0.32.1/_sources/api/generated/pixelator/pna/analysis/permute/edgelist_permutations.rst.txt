@@ -1,0 +1,15 @@
+pixelator.pna.analysis.permute.edgelist_permutations
+====================================================
+
+.. py:function:: pixelator.pna.analysis.permute.edgelist_permutations(edgelist_df: polars.DataFrame, n: int = 50, random_seed: Optional[int] = None) -> Generator[polars.DataFrame, None, None]
+
+   Generate `n` permutations of the markers in `edgelist_df`.
+
+   :param edgelist_df: dataframe to use as basis of permutations
+   :param n: number of permutations to generate, defaults to 50
+   :param random_seed: set a seed to the random number generator needed to make results deterministic,
+                       defaults to None
+
+   :returns: a generator that yields `n` permutations of the input dataframe (Generator[pl.DataFrame,
+             None, None])
+

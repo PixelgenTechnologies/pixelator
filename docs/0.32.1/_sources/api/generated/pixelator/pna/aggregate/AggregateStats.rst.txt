@@ -1,0 +1,23 @@
+pixelator.pna.aggregate.AggregateStats
+======================================
+
+.. py:class:: pixelator.pna.aggregate.AggregateStats
+
+   Statistics collected while aggregating an edgelist.
+
+
+   .. py:attribute:: input_reads
+      :type:  int
+
+
+   .. py:attribute:: output_molecules
+      :type:  int
+
+
+   .. py:attribute:: umi1_degree_distribution
+      :type:  collections.OrderedDict[int, int]
+
+
+   .. py:attribute:: umi2_degree_distribution
+      :type:  collections.OrderedDict[int, int]
+

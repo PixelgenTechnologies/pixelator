@@ -1,0 +1,26 @@
+pixelator.pna.aggregate.report
+==============================
+
+.. py:module:: pixelator.pna.aggregate.report
+
+.. autoapi-nested-parse::
+
+   Reporting metadata for the aggregate command.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/aggregate/report/AggregateSampleReport
+
+.. autoapisummary::
+
+   pixelator.pna.aggregate.report.AggregateSampleReport
+
+

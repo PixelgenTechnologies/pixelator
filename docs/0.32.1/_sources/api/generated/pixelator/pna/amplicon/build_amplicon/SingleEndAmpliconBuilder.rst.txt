@@ -1,0 +1,23 @@
+pixelator.pna.amplicon.build_amplicon.SingleEndAmpliconBuilder
+==============================================================
+
+.. py:class:: pixelator.pna.amplicon.build_amplicon.SingleEndAmpliconBuilder(assay: pixelator.pna.config.assay.PNAAssay, mismatches: int | float = 0.2, writer=None)
+
+   Bases: :py:obj:`AmpliconBuilder`
+
+
+   A wrapper for AmpliconBuilder that handles single-end reads.
+
+
+   .. py:method:: handle(read1: dnaio.SequenceRecord | None, read2: dnaio.SequenceRecord | None, info1: cutadapt.info.ModificationInfo | None = None, info2: cutadapt.info.ModificationInfo | None = None) -> tuple[Amplicon, AmpliconBuilderFailureReason | None]
+
+      Process a single read or a pair of reads to construct an amplicon.
+
+      :param read1: The forward read, or None if not available.
+      :param read2: The reverse read, or None if not available.
+      :param info1: Modification info for the forward read (ignored).
+      :param info2: Modification info for the reverse read (ignored).
+
+      :returns: A tuple containing the constructed Amplicon and an optional failure reason.
+
+

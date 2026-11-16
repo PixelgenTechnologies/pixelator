@@ -1,0 +1,41 @@
+pixelator.pna.collapse.paired.combine_collapse
+==============================================
+
+.. py:module:: pixelator.pna.collapse.paired.combine_collapse
+
+.. autoapi-nested-parse::
+
+   Combine collapse reports and parquet files into a single report and parquet file.
+
+   Copyright © 2025 Pixelgen Technologies AB
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.collapse.paired.combine_collapse.logger
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/collapse/paired/combine_collapse/combine_parquet_files
+   /api/generated/pixelator/pna/collapse/paired/combine_collapse/combine_report_files
+
+.. autoapisummary::
+
+   pixelator.pna.collapse.paired.combine_collapse.combine_parquet_files
+   pixelator.pna.collapse.paired.combine_collapse.combine_report_files
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+

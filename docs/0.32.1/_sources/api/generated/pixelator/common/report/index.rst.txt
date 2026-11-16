@@ -1,0 +1,23 @@
+pixelator.common.report
+=======================
+
+.. py:module:: pixelator.common.report
+
+.. autoapi-nested-parse::
+
+   Common report utilities for Pixelator.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/common/report/json_encoder/index
+   /api/generated/pixelator/common/report/models/index
+
+

@@ -1,0 +1,22 @@
+pixelator.pna.demux.pipeline.DemuxWorkerProcess
+===============================================
+
+.. py:class:: pixelator.pna.demux.pipeline.DemuxWorkerProcess(id_: int, pipeline: DemuxPipeline, inpaths: cutadapt.files.InputPaths, read_pipe: multiprocessing.connection.Connection, parent_pipe: multiprocessing.connection.Connection, writer_queue: multiprocessing.Queue, need_work_queue: multiprocessing.Queue, statistics_class: Type[cutadapt.report.Statistics] = Statistics)
+
+   Bases: :py:obj:`mpctx_Process`
+
+
+   A custom process that runs the pipeline on chunks of input data.
+
+   The worker process reads data from the read_pipe and processes it using the pipeline.
+   The results are sent to the writer_queue for writing to different output files.
+
+   To notify the reader process that it wants data, it puts its own identifier into the
+   need_work_queue before attempting to read data from the read_pipe.
+
+
+   .. py:method:: run()
+
+      Run the demux worker process.
+
+

@@ -1,0 +1,9 @@
+pixelator.pna.graph.component_recovery_utils.hash_component
+===========================================================
+
+.. py:function:: pixelator.pna.graph.component_recovery_utils.hash_component(component: set[int]) -> str
+
+   Hash a component deterministically based on its nodes.
+
+   Note: this preserves the historical hashing behavior used by the legacy pipeline.
+

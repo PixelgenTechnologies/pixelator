@@ -1,0 +1,33 @@
+pixelator.common.plot.colors.pixelgen_divergent_colormap
+========================================================
+
+.. py:function:: pixelator.common.plot.colors.pixelgen_divergent_colormap(hue_low: str = 'blues', hue_high: str = 'reds', min_level: int = 4, center_color: str = _DIVERGENT_CENTER_COLOR, n: int = 256) -> matplotlib.colors.LinearSegmentedColormap
+
+   Get a Pixelgen branded divergent matplotlib colormap between two hues.
+
+   The colormap goes from the dark end of ``hue_low``, through ``center_color``,
+   to the dark end of ``hue_high``. This is useful for signed values such as
+   correlations or differential scores.
+
+   Both the center and the shades immediately next to it are chosen to stay
+   clear of white by default (a light grey center, and a ``min_level`` floor
+   on both hues), so that values near the center of the scale -- which are
+   often the most common values, e.g. for a differential score centered on
+   zero -- remain visible rather than fading into a white plot background.
+
+   :param hue_low: The accent color hue for low (negative) values. See
+                   `pixelgen_accent_colors`.
+   :param hue_high: The accent color hue for high (positive) values. See
+                    `pixelgen_accent_colors`.
+   :param min_level: The lightest accent color level (1-12) to use on either
+                     side of the center. See `pixelgen_colorscale`.
+   :param center_color: The color to use for the exact center of the scale.
+                        Defaults to a light Pixelgen grey.
+   :param n: The number of discrete color levels to sample the colormap at.
+
+   :returns: A `matplotlib.colors.LinearSegmentedColormap` usable as a ``cmap=``
+             argument.
+
+   :raises ValueError: If ``hue_low`` or ``hue_high`` is unknown, or ``min_level``
+       is out of range.
+

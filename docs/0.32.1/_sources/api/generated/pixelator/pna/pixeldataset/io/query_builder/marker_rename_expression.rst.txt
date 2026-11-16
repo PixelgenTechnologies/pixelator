@@ -1,0 +1,7 @@
+pixelator.pna.pixeldataset.io.query_builder.marker_rename_expression
+====================================================================
+
+.. py:function:: pixelator.pna.pixeldataset.io.query_builder.marker_rename_expression(column: str, renames: Mapping[str, str]) -> str
+
+   Return a ``REPLACE`` entry that renames the marker ids in ``column``.
+

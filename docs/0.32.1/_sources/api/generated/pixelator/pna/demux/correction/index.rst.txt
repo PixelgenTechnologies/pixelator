@@ -1,0 +1,39 @@
+pixelator.pna.demux.correction
+==============================
+
+.. py:module:: pixelator.pna.demux.correction
+
+.. autoapi-nested-parse::
+
+   BKTree implementation for fast sequence matching.
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/demux/correction/BKTree
+
+.. autoapisummary::
+
+   pixelator.pna.demux.correction.BKTree
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/demux/correction/hamming_distance
+
+.. autoapisummary::
+
+   pixelator.pna.demux.correction.hamming_distance
+
+

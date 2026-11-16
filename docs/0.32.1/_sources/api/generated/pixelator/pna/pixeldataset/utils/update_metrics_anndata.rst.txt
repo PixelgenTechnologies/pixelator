@@ -1,0 +1,17 @@
+pixelator.pna.pixeldataset.utils.update_metrics_anndata
+=======================================================
+
+.. py:function:: pixelator.pna.pixeldataset.utils.update_metrics_anndata(adata: anndata.AnnData, inplace: bool = True) -> Optional[anndata.AnnData]
+
+   Update any metrics in the AnnData instance.
+
+   This will  update the QC metrics (`var` and `obs`) of
+   the AnnData object given as input. This function is typically used
+   when the AnnData object has been filtered and one wants the QC metrics
+   to be updated accordingly.
+
+   :param adata: an AnnData object
+   :param inplace: If `True` performs the operation inplace
+
+   :returns: the updated AnnData object or None if inplace is True (Optional[AnnData])
+

@@ -1,0 +1,60 @@
+pixelator.pna.collapse.independent.collapser.IndependentCollapseStatisticsCollector
+===================================================================================
+
+.. py:class:: pixelator.pna.collapse.independent.collapser.IndependentCollapseStatisticsCollector(region_id: CollapsibleRegion)
+
+   Collect statistics about the collapse process.
+
+
+   .. py:method:: add_input_file(input_file: pathlib.PurePath, molecule_count: int, file_size: int) -> None
+                  add_input_file(input_file: pathlib.Path, molecule_count: int, file_size: int | None = None) -> None
+
+      Collect file statistics for an input file to the MoleculeCollapser.
+
+      :param input_file: Input file to collapse.
+      :param molecule_count: Number of molecules in the input file.
+      :param file_size: File size in bytes; required when ``input_file`` is a ``PurePath``.
+
+      :raises TypeError: If ``file_size`` is not provided when ``input_file`` is a ``PurePath``.
+
+
+
+   .. py:method:: add_marker_stats(stats: MarkerCorrectionStats) -> None
+
+      Add statistics for a marker pair.
+
+      :param stats: The statistics for the correction of UMIs for reads with this marker.
+
+      :raises KeyError: If data for the marker pair already exists.
+
+
+
+   .. py:method:: get_combined_stats() -> _SummaryStatsDict
+
+      Compute combined summary statistics from all the marker pairs.
+
+
+
+   .. py:property:: markers
+      :type: list[MarkerCorrectionStats]
+
+
+      Return the per marker stats for the umi-1 region.
+
+
+   .. py:attribute:: region_id
+
+
+   .. py:method:: to_dict() -> dict
+
+      Return the statistics as a dictionary.
+
+
+
+   .. py:method:: to_sample_report(sample_id) -> SingleUMICollapseSampleReport
+
+      Return the statistics as a SampleReport.
+
+      :returns: A `SingleUMICollapseSampleReport` containing the statistics.
+
+

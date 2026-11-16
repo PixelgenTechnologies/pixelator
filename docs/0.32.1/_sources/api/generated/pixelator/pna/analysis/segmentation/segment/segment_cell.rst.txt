@@ -1,0 +1,79 @@
+pixelator.pna.analysis.segmentation.segment.segment_cell
+========================================================
+
+.. py:function:: pixelator.pna.analysis.segmentation.segment.segment_cell(graph: pixelator.pna.graph.PNAGraph, w: pandas.DataFrame, k: int = 2, detect_interface: bool = True, k_interface_expansion: int = 0, keep_largest_comp: bool = True, min_comp_size: int = 10, spatial_smoothing_iter: int = 5, verbose: bool = True, random_state: int = 0) -> pixelator.pna.graph.PNAGraph
+
+   Classify conjugate-graph nodes into two cell types.
+
+   Uses NMF protein weights (``w``, typically from
+   :func:`~pixelator.pna.analysis.cc_protein_weights`) to score each node
+   from its k-hop neighborhood, then labels the two cell types and
+   optionally the interface between them. Nodes that are not kept in a
+   cell-type component are labeled ``"other"``.
+
+   The result is stored as the node attribute ``compartment``, replacing
+   that attribute if it already exists. The same :class:`~pixelator.pna.graph.PNAGraph`
+   instance is updated in place and returned.
+
+   :param graph: Component graph of a cell:cell conjugate, typically
+                 ``component.graph`` from a ``PNAPixelDataset`` edgelist
+                 iterator.
+   :param w: Protein weights with one row per protein and exactly two
+             columns named after the two cell types. Usually the return
+             value of ``cc_protein_weights`` (each column sums to 1).
+   :param k: Hop distance used to build local neighborhood abundance
+             profiles before projecting ``w``. Default 2. Must be between
+             1 and 6.
+   :param detect_interface: If True, label nodes on a crossing edge between
+                            the two retained cell-type components as ``"interface"``.
+                            Default True.
+   :param k_interface_expansion: Extra hops of neighbors to include in the
+                                 interface. ``0`` (default) keeps only nodes that sit on a
+                                 crossing edge. Must be between 0 and 4. Ignored when
+                                 ``detect_interface`` is False.
+   :param keep_largest_comp: If True (default), keep only the largest
+                             connected component per cell type. If False, keep every
+                             component with at least ``min_comp_size`` nodes.
+   :param min_comp_size: Minimum component size when
+                         ``keep_largest_comp`` is False. Default 10.
+   :param spatial_smoothing_iter: Smoothing iterations on the NNLS scores
+                                  using the graph adjacency. Default 5. ``0`` skips smoothing.
+   :param verbose: If True, log progress. Default True.
+   :param random_state: Seed for the 2-means threshold on population-1
+                        scores, so labels can be reproduced. Default 0.
+
+   :returns: The same ``PNAGraph``, with a ``compartment`` node attribute.
+             Values are the two column names of ``w``, ``"interface"``, or
+             ``"other"``.
+
+   :raises TypeError: If ``graph`` is not a ``PNAGraph``, ``w`` is not a
+       DataFrame, or a flag/integer argument has the wrong type.
+   :raises ValueError: If ``w`` does not have two named columns and named
+       protein rows, if no proteins are shared with the graph, or if
+       a numeric argument is outside its allowed range.
+
+   .. rubric:: Examples
+
+   ``cc_protein_weights`` needs cell type labels in ``adata.obs``
+   (here ``"cell_type"``). Assigning those labels is not shown::
+
+       from pixelator.pna.analysis import cc_protein_weights, segment_cell
+       from pixelator.pna.pixeldataset import read
+
+       dataset = read("sample.pxl")
+       adata = dataset.adata()
+       # here cell types need to be annotated in adata.obs["cell_type"] before calling cc_protein_weights
+       w = cc_protein_weights(
+           adata,
+           group_by="cell_type",
+           population_1="B",
+           population_2="T",
+       )
+       for component in dataset.edgelist().iterator():
+           segment_cell(component.graph, w)
+
+   .. seealso::
+
+      ``segment_cell`` in pixelatorR, the equivalent function for
+      R users.
+

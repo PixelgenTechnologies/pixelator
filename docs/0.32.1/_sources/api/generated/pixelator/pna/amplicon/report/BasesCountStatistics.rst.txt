@@ -1,0 +1,50 @@
+pixelator.pna.amplicon.report.BasesCountStatistics
+==================================================
+
+.. py:class:: pixelator.pna.amplicon.report.BasesCountStatistics(/, **data: Any)
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+
+   The result of the base count statistics.
+
+
+   .. py:attribute:: input
+      :type:  int
+
+
+   .. py:attribute:: input_read1
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: input_read2
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: output
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: quality_trimmed
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: quality_trimmed_read1
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: quality_trimmed_read2
+      :type:  Optional[int]
+      :value: None
+
+

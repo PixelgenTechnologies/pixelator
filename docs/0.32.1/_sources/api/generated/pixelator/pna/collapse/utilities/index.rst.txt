@@ -1,0 +1,60 @@
+pixelator.pna.collapse.utilities
+================================
+
+.. py:module:: pixelator.pna.collapse.utilities
+
+.. autoapi-nested-parse::
+
+   Common functions for collapsing data.
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.collapse.utilities.MoleculeCollapserAlgorithm
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/collapse/utilities/CollapseInputs
+   /api/generated/pixelator/pna/collapse/utilities/FAISSBackend
+   /api/generated/pixelator/pna/collapse/utilities/SplitFilesResult
+
+.. autoapisummary::
+
+   pixelator.pna.collapse.utilities.CollapseInputs
+   pixelator.pna.collapse.utilities.FAISSBackend
+   pixelator.pna.collapse.utilities.SplitFilesResult
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/collapse/utilities/build_binary_index
+   /api/generated/pixelator/pna/collapse/utilities/check_collapse_strategy_inputs
+   /api/generated/pixelator/pna/collapse/utilities/split_collapse_inputs
+
+.. autoapisummary::
+
+   pixelator.pna.collapse.utilities.build_binary_index
+   pixelator.pna.collapse.utilities.check_collapse_strategy_inputs
+   pixelator.pna.collapse.utilities.split_collapse_inputs
+
+
+Module Contents
+---------------
+
+.. py:data:: MoleculeCollapserAlgorithm
+

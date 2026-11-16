@@ -1,0 +1,37 @@
+pixelator.pna.config.panel.PanelAlignment
+=========================================
+
+.. py:class:: pixelator.pna.config.panel.PanelAlignment
+
+   The result of aligning several panels.
+
+   :ivar rows: ``(sequence_1, sequence_2)`` to the newest row, as a dict with the
+               ``marker_id`` and every panel column. Markers that only some of
+               the panels contain, for example those of an add-on, are included.
+
+
+
+   .. py:method:: marker_renames(panel: pixelator.pna.config.panel.antibody_panel.PNAAntibodyPanel) -> dict[str, str]
+
+      Return ``old marker id -> new marker id`` for one input panel.
+
+      Only ids that change are included. Hashing markers get two kinds of
+      entries, because sample calling collapses their clone ids in the data:
+
+      - the clone id, ``B2M-1 -> B3M-1``
+      - the collapsed id, ``B2M -> B3M``
+
+      The collapsed entry is left out when the clones of one base do not
+      agree on the new base, or when the base id is itself a marker of the
+      panel, since the two could not be told apart in collapsed data.
+
+      :param panel: A panel that was passed to
+                    :func:`~pixelator.pna.config.panel.align.align_panels`.
+
+      :returns: The renames, empty when the panel is already up to date.
+
+
+
+   .. py:attribute:: rows
+      :type:  dict[tuple[str, str], dict[str, Any]]
+

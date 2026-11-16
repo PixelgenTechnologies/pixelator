@@ -1,0 +1,26 @@
+pixelator.testing.reads
+=======================
+
+.. py:module:: pixelator.testing.reads
+
+.. autoapi-nested-parse::
+
+   Fastq read generation from populated cell edge lists.
+
+   Copyright © 2022 Pixelgen Technologies AB.
+
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/testing/reads/write_pna_fastq
+
+.. autoapisummary::
+
+   pixelator.testing.reads.write_pna_fastq
+
+

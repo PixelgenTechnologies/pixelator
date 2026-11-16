@@ -1,0 +1,23 @@
+pixelator.pna.read
+==================
+
+.. py:function:: pixelator.pna.read(paths: pathlib.Path | list[pathlib.Path] | str | list[str], force: bool = False) -> dataset.PNAPixelDataset
+
+   Read data from one or more ``.pxl`` files.
+
+   :param paths: One or more paths to ``.pxl`` files. A single path or a list of
+                 paths may be passed. Each path may be a ``pathlib.Path`` or ``str``.
+   :param force: Load files whose antibody panels have conflicting markers, with a
+                 warning, instead of raising.
+
+   :returns: The data from the ``.pxl`` file(s).
+
+   :raises duckdb.IOException: If a file is not a DuckDB database file.
+   :raises NullPxlFileError: If a file is a null pxl file. The message includes the
+       stored reason. An upstream step produced no usable data for that sample.
+   :raises ValueError: If a file is not a valid ``.pxl`` file, if a sample name cannot
+       be determined from file metadata, or if a null file has no reason.
+   :raises FileNotFoundError: If any path does not exist on disk.
+   :raises PanelConflictError: If the antibody panels of the files have conflicting
+       markers and ``force`` is not set.
+

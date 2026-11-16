@@ -1,0 +1,15 @@
+pixelator.common.utils.group_input_reads
+========================================
+
+.. py:function:: pixelator.common.utils.group_input_reads(inputs: Sequence[pixelator.common.types.PathType], input1_pattern: str, input2_pattern: str) -> Dict[str, List[pathlib.Path]]
+
+   Group input files by read pairs and sample id.
+
+   :param inputs: list of input files
+   :param input1_pattern: pattern to match read1 files
+   :param input2_pattern: pattern to match read2 files
+
+   :returns: a dictionary with the grouped reads (Dict[str, List[Path]])
+
+   :raises ValueError: if the number of reads for a sample is more than 2
+

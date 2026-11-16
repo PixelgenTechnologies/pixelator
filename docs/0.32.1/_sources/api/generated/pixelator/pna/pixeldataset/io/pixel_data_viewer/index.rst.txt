@@ -1,0 +1,28 @@
+pixelator.pna.pixeldataset.io.pixel_data_viewer
+===============================================
+
+.. py:module:: pixelator.pna.pixeldataset.io.pixel_data_viewer
+
+.. autoapi-nested-parse::
+
+   Virtual SQL views over multiple PXL files.
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/pixeldataset/io/pixel_data_viewer/PixelDataViewer
+   /api/generated/pixelator/pna/pixeldataset/io/pixel_data_viewer/PixelDataViewerSession
+
+.. autoapisummary::
+
+   pixelator.pna.pixeldataset.io.pixel_data_viewer.PixelDataViewer
+   pixelator.pna.pixeldataset.io.pixel_data_viewer.PixelDataViewerSession
+
+

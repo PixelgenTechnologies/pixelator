@@ -1,0 +1,16 @@
+pixelator.pna.analysis.permute.permute_edgelist
+===============================================
+
+.. py:function:: pixelator.pna.analysis.permute.permute_edgelist(edgelist: polars.DataFrame, random_number_generator: Optional[numpy.random.Generator] = None)
+
+   Permute markers in an edgelist.
+
+   This function permutes the edgelist by shuffling the corresponding
+   markers to umi1 and umi2 columns.
+
+   :param edgelist: A DataFrame representing the edgelist
+   :param n_permutations: The number of permutations to perform
+   :param random_number_generator: A RandomNumberGenerator instance
+
+   :returns: A DataFrame containing the permuted edgelist
+

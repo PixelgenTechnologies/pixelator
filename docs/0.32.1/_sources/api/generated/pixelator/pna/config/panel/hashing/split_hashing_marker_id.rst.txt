@@ -1,0 +1,7 @@
+pixelator.pna.config.panel.hashing.split_hashing_marker_id
+==========================================================
+
+.. py:function:: pixelator.pna.config.panel.hashing.split_hashing_marker_id(marker_id: str) -> tuple[str, str] | None
+
+   Return ``(base, index)`` for a hashing id such as ``B2M-1``.
+
