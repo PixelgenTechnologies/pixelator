@@ -59,7 +59,8 @@ def main_cli(ctx, verbose: bool, profile: bool, log_file: str, cores: int):
     Exit codes:
       0    success
       1    error (e.g. invalid input); re-running will not help
-      137  out of memory or spill space; re-run with more resources
+      137  out of memory, out of spill space or worker killed; re-run with
+           more resources
     """
     # early out if run in help mode
     if any(x in sys.argv for x in ["--help", "--version"]):

@@ -6,6 +6,7 @@ Copyright © 2022 Pixelgen Technologies AB.
 import collections
 import functools
 import logging.handlers
+from concurrent.futures.process import BrokenProcessPool
 from pathlib import Path
 from typing import Dict, Mapping, Optional
 
@@ -56,18 +57,26 @@ class AliasedOrderedGroup(OrderedGroup):
 
     Currently only supports aliases for subgroups.
 
-    Out-of-memory failures in any subcommand exit with
-    ``EXIT_CODE_RESOURCE_EXHAUSTED`` instead of 1.
+    Out-of-memory failures (including worker processes killed by the OS) in any
+    subcommand exit with ``EXIT_CODE_RESOURCE_EXHAUSTED`` instead of 1.
     """
 
     def invoke(self, ctx: click.Context):
         """Invoke the command, mapping out-of-memory errors to a dedicated exit code."""
         try:
             return super().invoke(ctx)
-        except (duckdb.OutOfMemoryException, MemoryError) as error:
+        except (
+            duckdb.OutOfMemoryException,
+            MemoryError,
+            # A worker killed by the OS (typically the kernel OOM killer) leaves
+            # no trace of its cause. A crash for another reason is mapped too,
+            # which is harmless: the retry will simply fail again.
+            BrokenProcessPool,
+        ) as error:
             logger.debug("Out of memory error", exc_info=True)
             logger.error(
-                "Out of memory: %s\nRe-run with more memory (--memory), or set "
+                "Out of memory (or worker process killed): %s\n"
+                "Re-run with more memory (--memory), or set "
                 "PIXELATOR_DUCKDB_TEMP_DIR or PIXELATOR_DUCKDB_MAX_TEMP_DIR_SIZE "
                 "to give DuckDB more spill space.",
                 error,

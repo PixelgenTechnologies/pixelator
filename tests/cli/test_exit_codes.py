@@ -3,6 +3,8 @@
 Copyright © 2026 Pixelgen Technologies AB.
 """
 
+from concurrent.futures.process import BrokenProcessPool
+
 import click
 import duckdb
 import pytest
@@ -13,7 +15,11 @@ from pixelator.cli.common import EXIT_CODE_RESOURCE_EXHAUSTED, AliasedOrderedGro
 
 @pytest.mark.parametrize(
     "error",
-    [duckdb.OutOfMemoryException("out of memory"), MemoryError("out of memory")],
+    [
+        duckdb.OutOfMemoryException("out of memory"),
+        MemoryError("out of memory"),
+        BrokenProcessPool("worker terminated abruptly"),
+    ],
 )
 def test_group_maps_out_of_memory_to_resource_exit_code(error):
     """Out-of-memory errors from any subcommand exit with the dedicated code."""
