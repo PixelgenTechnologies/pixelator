@@ -1,7 +1,9 @@
 #schema: https://github.com/softprops/github-actions-schemas/blob/master/workflow.json
 #
-# Run the nf-test suite of the nf-core/pixelator pipeline with a pixelator
-# container image built from this repository.
+# Run the nf-core/pixelator proxiome v2 pipeline test with a pixelator
+# container image built from this repository. That test runs the whole
+# pipeline end to end and uses every pixelator module, so the separate module
+# tests and the v1 pipeline test (which has no sample-calling step) are left out.
 #
 # Every pixelator step in the pipeline is switched to the given image with the
 # pipeline's `--pixelator_container` parameter. The question this answers is
@@ -45,20 +47,17 @@ permissions:
 
 env:
   NXF_ANSI_LOG: false
+  # The nf-test file to run, relative to the pipeline repository
+  NF_TEST_PATH: "tests/proxiome_v2.nf.test"
   # Used when the versions cannot be read from the pipeline's own CI config
   DEFAULT_NFT_VER: "0.9.4"
   DEFAULT_NXF_VER: "25.10.4"
 
 jobs:
   nf-test:
-    name: "nf-test (shard ${{ matrix.shard }}/${{ strategy.job-total }})"
+    name: "nf-test (proxiome v2 pipeline)"
     runs-on: ubuntu-latest
-    timeout-minutes: 120
-    strategy:
-      fail-fast: false
-      matrix:
-        # The test suite is split over these parallel jobs with `nf-test --shard`
-        shard: [1, 2, 3, 4]
+    timeout-minutes: 60
     env:
       IMAGE: ${{ inputs.image }}
       PIPELINE_REF: ${{ inputs.pipeline-ref }}
@@ -122,12 +121,16 @@ jobs:
 
       - name: Run nf-test
         run: |
-          nf-test test \
+          # Fail clearly if the pipeline renames or moves the test file
+          if [[ ! -f "$NF_TEST_PATH" ]]; then
+            echo "::error::${NF_TEST_PATH} not found in nf-core/pixelator@${PIPELINE_REF}"
+            exit 1
+          fi
+          nf-test test "$NF_TEST_PATH" \
             --profile=+docker \
             --update-snapshot \
             --verbose \
-            --tap=test.tap \
-            --shard ${{ matrix.shard }}/${{ strategy.job-total }}
+            --tap=test.tap
 
       # Guard against the override silently not applying: in that case the
       # pipeline would pull its own pinned pixelator release and pass anyway.
@@ -146,7 +149,7 @@ jobs:
         run: |
           git diff -- '*.snap' > snapshot-changes.diff || true
           {
-            echo "## nf-core/pixelator@${PIPELINE_REF} — shard ${{ matrix.shard }}/${{ strategy.job-total }}"
+            echo "## nf-core/pixelator@${PIPELINE_REF} — \`${NF_TEST_PATH}\`"
             echo ""
             echo "Image: \`${IMAGE}\`"
             echo ""
@@ -180,7 +183,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: nf-core-pixelator-test-shard-${{ matrix.shard }}
+          name: nf-core-pixelator-test-results
           path: |
             test.tap
             snapshot-changes.diff
