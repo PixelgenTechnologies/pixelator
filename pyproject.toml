@@ -5,7 +5,7 @@ description = "A command-line tool and library to process and analyze data gener
 authors = [
     { name = "Pixelgen Technologies AB", email = "developers@pixelgen.com" },
 ]
-requires-python = ">=3.11,<3.14"
+requires-python = ">=3.11.5,<3.14"
 readme = "README.md"
 license = "MIT"
 maintainers = [

@@ -52,7 +52,7 @@ jobs:
         py:
           - "3.13"
           - "3.12"
-          - "3.11"
+          - "3.11.5"
 
     steps:
       - uses: actions/checkout@v4
