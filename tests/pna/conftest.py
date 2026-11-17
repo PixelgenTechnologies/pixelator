@@ -130,16 +130,6 @@ def pna_pxl_panel_dataset_fixture(pna_data_root):
     return read(pna_data_root / "pxl_file_with_panel.pxl")
 
 
-@pytest.fixture(scope="session")
-def full_run_dir() -> Path:
-    """Full run dir.
-
-    Returns:
-        Result (Path).
-    """
-    return Path(PNA_DATA_ROOT) / "full_run"
-
-
 @pytest.fixture(scope="module")
 def testdata_300k(pna_data_root) -> tuple[Path, Path]:
     """Testdata 300k.
@@ -151,56 +141,6 @@ def testdata_300k(pna_data_root) -> tuple[Path, Path]:
         Path(pna_data_root / "PNA055_Sample07_300k_S7_R1_001.fastq.gz"),
         Path(pna_data_root / "PNA055_Sample07_300k_S7_R2_001.fastq.gz"),
     )
-
-
-@pytest.fixture(scope="module")
-def testdata_unbalanced_r12(pna_data_root) -> tuple[Path, Path]:
-    """Testdata unbalanced r12.
-
-    Args:
-        pna_data_root: pna data root.
-    """
-    return (
-        Path(pna_data_root / "unbalanced_R1.fastq.gz"),
-        Path(pna_data_root / "unbalanced_R2.fastq.gz"),
-    )
-
-
-@pytest.fixture(scope="module")
-def testdata_amplicon_fastq(full_run_dir) -> Path:
-    """Testdata amplicon fastq.
-
-    Args:
-        full_run_dir: full run dir.
-    """
-    p = full_run_dir / "amplicon" / "PNA055_Sample07_filtered_S7.amplicon.fq.zst"
-    return p
-
-
-@pytest.fixture(scope="module")
-def testdata_paired_small_demux(pna_data_root) -> Path:
-    """Testdata paired small demux.
-
-    Args:
-        pna_data_root: pna data root.
-    """
-    p = Path(
-        pna_data_root
-        / "paired-demux-results"
-        / "PNA055_Sample07_filtered_S7.demux.part_000.parquet"
-    )
-    return p
-
-
-@pytest.fixture(scope="module")
-def testdata_demux_passed_reads(pna_data_root) -> Path:
-    """Testdata demux passed reads.
-
-    Args:
-        pna_data_root: pna data root.
-    """
-    p = pna_data_root / "PNA055_Sample07_filtered_S7.100_reads.demux.passed.fq"
-    return p
 
 
 @pytest.fixture(name="layout_dataframe", scope="module")
