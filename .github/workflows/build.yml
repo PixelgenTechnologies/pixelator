@@ -36,6 +36,7 @@ jobs:
             python:
               paths:
                 - 'pyproject.toml'
+                - 'uv.lock'
                 - 'src/**'
                 - 'containers/**'
                 - '.github/actions/setup-image-build-env/action.yml'
