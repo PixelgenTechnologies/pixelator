@@ -1,13 +1,13 @@
 FROM registry.fedoraproject.org/fedora-minimal:42 AS runtime-base
 # procps-ng provides `ps`, which Nextflow needs to collect task metrics.
 RUN microdnf install -y \
-    python3.13 \
+    python3.14 \
     procps-ng \
     && microdnf clean all
 
 # This is needed to easily run other python scripts inside the pixelator container
 # eg. samplesheet checking in nf-core/pixelator
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.13 1
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.14 1
 
 # ------------------------------------------
 # -- Build the pixelator package
