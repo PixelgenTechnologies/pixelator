@@ -19,7 +19,6 @@ from pixelator.common.utils import (
     R1_REGEX,
     R2_REGEX,
     get_extension,
-    get_sample_name,
     logger,
 )
 
@@ -146,32 +145,6 @@ def clean_suffixes(path: PurePath) -> PurePath:
         path = path.with_suffix("")
 
     return path
-
-
-def get_demux_filename_info(filename: str | Path | PurePath) -> tuple[str, int]:
-    """Extract the sample name and part for a `demux` output parquet file.
-
-    The demux output file are expeted to use following schema:
-    <sample_name>.demux.part_<part_number>.parquet
-
-    Args:
-        filename: path to the file
-
-    Returns:
-        the demux part (str)
-    """
-    sample_name = get_sample_name(filename)
-    filename_str = str(filename)
-
-    if (".demux" not in filename_str) or (".part_" not in filename_str):
-        raise ValueError("Invalid demux filename. Did not contain .demux or .part_")
-
-    match = re.match(r".*\.part_(\d+)\.*", filename_str)
-    if match:
-        demux_part = int(match.group(1))
-        return sample_name, demux_part
-
-    raise ValueError("Invalid demux filename.")
 
 
 def timer(command_name: str | None = None):
