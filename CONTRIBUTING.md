@@ -24,7 +24,7 @@ Releases are generated from these messages, so the title must follow
 | `revert` | Revert a previous change | patch | yes |
 | `refactor`, `docs`, `test`, `build`, `ci`, `chore` | No user-facing change | none | no |
 
-- Mark a breaking change with `!` (`feat!: drop Python 3.11`) or a `BREAKING CHANGE:` footer. This bumps the major version.
+- Mark a breaking change with `!` (`feat!: drop Python 3.11`) or a `BREAKING CHANGE:` footer. Before 1.0.0 this bumps the minor version; from 1.0.0 it bumps the major version.
 - Use the scope for the area of the code (`feat(pna): ...`, `fix(cli): ...`).
 - Keep the description short and in the imperative mood, since it becomes the changelog entry.
 - A CI check validates the title of every PR.
