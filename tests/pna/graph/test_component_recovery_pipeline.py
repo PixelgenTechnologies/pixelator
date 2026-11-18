@@ -203,6 +203,44 @@ def test_find_components_small(
         )
 
 
+def test_find_components_drops_marker_sequence_columns(random_graph_path, tmp_path):
+    """The marker sequence columns from aggregate are not carried into the output edgelist.
+
+    Args:
+        random_graph_path: random graph path.
+        tmp_path: pytest temporary directory.
+    """
+    input_path = tmp_path / "edgelist_with_sequences.parquet"
+    input_edgelist = pl.read_parquet(random_graph_path).with_columns(
+        marker_sequence_1=pl.lit("ACGTACGTAC"),
+        marker_sequence_2=pl.lit("TTTTGGGGCC"),
+    )
+    input_edgelist.write_parquet(input_path)
+    working_dir = tmp_path / "work"
+    working_dir.mkdir()
+
+    _, resolved_edgelist_path = find_components(
+        input_edgelist_path=input_path,
+        working_dir=working_dir,
+        multiplet_recovery=True,
+        edge_cycle_verification=False,
+        min_read_count=1,
+        component_size_threshold=(10, 1_000_000),
+        n_threads=2,
+        refinement_options=StagedRefinementOptions(
+            initial_stage_options=RefinementOptions(min_component_size_to_prune=50),
+        ),
+    )
+
+    columns = pl.read_parquet_schema(resolved_edgelist_path).keys()
+    assert "marker_sequence_1" not in columns
+    assert "marker_sequence_2" not in columns
+    assert set(input_edgelist.columns) - {
+        "marker_sequence_1",
+        "marker_sequence_2",
+    } <= set(columns)
+
+
 def test_find_components_raises_when_every_component_is_too_large(random_graph_path):
     """A hard max threshold below every component's size raises cleanly instead of crashing.
 
