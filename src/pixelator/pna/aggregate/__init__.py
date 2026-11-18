@@ -3,14 +3,55 @@
 Copyright © 2026 Pixelgen Technologies AB.
 """
 
+import logging
+import threading
+import time
 from collections import OrderedDict
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
 from duckdb import DuckDBPyConnection
 
 from pixelator.pna.utils import init_duckdb_conn
+
+logger = logging.getLogger(__name__)
+
+# Seconds between "still running" messages while a DuckDB query is executing.
+_HEARTBEAT_INTERVAL_SECONDS = 30.0
+
+
+@contextmanager
+def _log_stage(stage: str) -> Iterator[None]:
+    """Log the start and end of a stage, with periodic heartbeats in between.
+
+    DuckDB's own progress bar is not usable here (it writes to the terminal and
+    cannot be polled from another thread), so a background thread logs the
+    elapsed time at a fixed interval to show the query is still running.
+    """
+    start = time.monotonic()
+    done = threading.Event()
+
+    def _heartbeat() -> None:
+        while not done.wait(_HEARTBEAT_INTERVAL_SECONDS):
+            logger.info(
+                "Aggregate stage '%s' still running (%.0fs elapsed)",
+                stage,
+                time.monotonic() - start,
+            )
+
+    logger.info("Aggregate stage '%s' started", stage)
+    heartbeat = threading.Thread(target=_heartbeat, daemon=True)
+    heartbeat.start()
+    try:
+        yield
+    finally:
+        done.set()
+        heartbeat.join()
+    logger.info(
+        "Aggregate stage '%s' finished in %.1fs", stage, time.monotonic() - start
+    )
 
 
 def _normalize_edgelist_paths(edgelist: Path | Sequence[Path]) -> list[Path]:
@@ -179,34 +220,42 @@ def aggregate_edgelist(
 
         # Input and output paths must not be spliced into the SQL as-is: the inputs
         # are bound, and DuckDB cannot bind the COPY target, so it is quoted.
-        conn.execute(
-            f"""
-            COPY (
-                SELECT marker_1, marker_2, umi1, umi2,
-                    any_value(COLUMNS(* EXCLUDE (marker_1, marker_2, umi1, umi2))),
-                    count(*)::UINTEGER AS read_count
-                FROM read_parquet(?)
-                GROUP BY marker_1, marker_2, umi1, umi2
-                ORDER BY umi1, umi2, marker_1, marker_2
-            ) TO {_quote_sql_string(output)}
-            (FORMAT parquet, CODEC 'zstd', COMPRESSION_LEVEL 6);
-            """,
-            [[str(path) for path in edgelist_paths]],
-        )
+        with _log_stage("collapse and write molecules"):
+            conn.execute(
+                f"""
+                COPY (
+                    SELECT marker_1, marker_2, umi1, umi2,
+                        any_value(COLUMNS(* EXCLUDE (marker_1, marker_2, umi1, umi2))),
+                        count(*)::UINTEGER AS read_count
+                    FROM read_parquet(?)
+                    GROUP BY marker_1, marker_2, umi1, umi2
+                    ORDER BY umi1, umi2, marker_1, marker_2
+                ) TO {_quote_sql_string(output)}
+                (FORMAT parquet, CODEC 'zstd', COMPRESSION_LEVEL 6);
+                """,
+                [[str(path) for path in edgelist_paths]],
+            )
 
         # No filtering during aggregate, so sum(read_count) == input row count.
-        counts = conn.execute(
-            """
-            SELECT coalesce(sum(read_count), 0)::BIGINT, count(*)
-            FROM read_parquet(?)
-            """,
-            [str(output)],
-        ).fetchone()
+        with _log_stage("count molecules and reads"):
+            counts = conn.execute(
+                """
+                SELECT coalesce(sum(read_count), 0)::BIGINT, count(*)
+                FROM read_parquet(?)
+                """,
+                [str(output)],
+            ).fetchone()
         # An aggregate query without GROUP BY always returns exactly one row.
         assert counts is not None
         input_reads, output_molecules = (int(value) for value in counts)
-        umi1_degree_distribution = _compute_degree_distribution(conn, output, "umi1")
-        umi2_degree_distribution = _compute_degree_distribution(conn, output, "umi2")
+        with _log_stage("umi1 degree distribution"):
+            umi1_degree_distribution = _compute_degree_distribution(
+                conn, output, "umi1"
+            )
+        with _log_stage("umi2 degree distribution"):
+            umi2_degree_distribution = _compute_degree_distribution(
+                conn, output, "umi2"
+            )
 
     return AggregateStats(
         input_reads=input_reads,

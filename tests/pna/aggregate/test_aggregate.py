@@ -3,11 +3,13 @@
 Copyright © 2026 Pixelgen Technologies AB.
 """
 
+import time
 from pathlib import Path
 
 import polars as pl
 import pytest
 
+from pixelator.pna import aggregate as aggregate_module
 from pixelator.pna.aggregate import (
     AggregateStats,
     InvalidEdgelistSchemaError,
@@ -405,3 +407,38 @@ def test_aggregate_handles_special_characters_in_paths(tmp_path: Path, dir_name:
     assert stats.output_molecules == 2
     result = pl.read_parquet(output_path).sort("umi1")
     assert result["read_count"].to_list() == [3, 1]
+
+
+def test_aggregate_logs_each_stage(tmp_path: Path, caplog: pytest.LogCaptureFixture):
+    """Every DuckDB stage logs when it starts and finishes."""
+    input_path = tmp_path / "sample.parquet"
+    _write_edgelist(input_path, [("CD3", "CD4", 1, 2), ("CD3", "CD4", 1, 2)])
+
+    with caplog.at_level("INFO", logger="pixelator.pna.aggregate"):
+        aggregate_edgelist(input_path, tmp_path / "out.parquet")
+
+    messages = [record.getMessage() for record in caplog.records]
+    for stage in (
+        "collapse and write molecules",
+        "count molecules and reads",
+        "umi1 degree distribution",
+        "umi2 degree distribution",
+    ):
+        assert f"Aggregate stage '{stage}' started" in messages
+        assert any(
+            message.startswith(f"Aggregate stage '{stage}' finished")
+            for message in messages
+        )
+
+
+def test_log_stage_emits_heartbeat_while_running(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+):
+    """A long-running stage logs periodic 'still running' messages."""
+    monkeypatch.setattr(aggregate_module, "_HEARTBEAT_INTERVAL_SECONDS", 0.01)
+
+    with caplog.at_level("INFO", logger="pixelator.pna.aggregate"):
+        with aggregate_module._log_stage("slow"):
+            time.sleep(0.2)
+
+    assert any("'slow' still running" in r.getMessage() for r in caplog.records)
