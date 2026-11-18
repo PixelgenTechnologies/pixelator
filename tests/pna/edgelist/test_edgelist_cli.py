@@ -72,7 +72,14 @@ def edgelist_cli_run(testdata_300k):
 def test_edgelist_paired_run_writes_parquet(edgelist_cli_run):
     """Paired raw FASTQ reads produce a single edgelist parquet."""
     _, _, df = edgelist_cli_run
-    assert df.columns == ["marker_1", "marker_2", "umi1", "umi2"]
+    assert df.columns == [
+        "marker_1",
+        "marker_2",
+        "umi1",
+        "umi2",
+        "marker_sequence_1",
+        "marker_sequence_2",
+    ]
     assert df.height > 0
 
 
