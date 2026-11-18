@@ -39,7 +39,8 @@ def get_duckdb_threads_from_env() -> str | None:
 def resolve_duckdb_temp_dir(temp_dir: Path | str | None = None) -> Path:
     """Resolve the DuckDB spill directory.
 
-    Uses the explicit argument, then ``PIXELATOR_DUCKDB_TEMP_DIR``, then ``/tmp``.
+    Uses the explicit argument, then ``PIXELATOR_DUCKDB_TEMP_DIR``, then ``TMPDIR``,
+    then ``/tmp``. An unset ``TMPDIR`` leaves the ``/tmp`` fallback unchanged.
 
     Args:
         temp_dir: An explicit spill directory that takes precedence over the env var.
@@ -49,7 +50,13 @@ def resolve_duckdb_temp_dir(temp_dir: Path | str | None = None) -> Path:
     """
     if temp_dir is not None:
         return Path(temp_dir)
-    return get_duckdb_temp_dir_from_env() or DEFAULT_DUCKDB_TEMP_DIR
+    from_env = get_duckdb_temp_dir_from_env()
+    if from_env is not None:
+        return from_env
+    tmpdir = os.environ.get("TMPDIR")
+    if tmpdir:
+        return Path(tmpdir)
+    return DEFAULT_DUCKDB_TEMP_DIR
 
 
 def connect_duckdb(
@@ -70,7 +77,8 @@ def connect_duckdb(
         read_only: Whether to open the database in read-only mode.
         config: A DuckDB configuration dict passed through to ``duckdb.connect``.
             If it has no ``threads`` entry, ``PIXELATOR_DUCKDB_THREADS`` is used when set.
-        temp_dir: The spill directory. Defaults to ``PIXELATOR_DUCKDB_TEMP_DIR`` or ``/tmp``.
+        temp_dir: The spill directory. Defaults to ``PIXELATOR_DUCKDB_TEMP_DIR``,
+            ``TMPDIR``, or ``/tmp``.
         temp_dir_size_limit: The spill directory size limit. Defaults to
             ``PIXELATOR_DUCKDB_MAX_TEMP_DIR_SIZE`` when unset.
 
