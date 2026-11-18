@@ -58,10 +58,15 @@ class Edgelist:
         return set(adata.obs.index.to_list())
 
     def _edgelist_query(
-        self, adapter: LegacyMarkerQueryAdapter, components: list[str] | None
+        self,
+        adapter: LegacyMarkerQueryAdapter,
+        components: list[str] | None,
+        include_marker_sequences: bool = True,
     ) -> Query:
         """Build the edgelist query, adapted for a legacy marker schema when needed."""
-        return adapter.adapt(self._query_builder.edgelist_query(components))
+        return adapter.adapt(
+            self._query_builder.edgelist_query(components, include_marker_sequences)
+        )
 
     def __len__(self) -> int:
         """Get the number of edges in the edgelist."""
@@ -98,18 +103,25 @@ class Edgelist:
         return df
 
     def to_record_batches(
-        self, batch_size: int = 1_000_000
+        self, batch_size: int = 1_000_000, include_marker_sequences: bool = True
     ) -> Iterable[pa.RecordBatch]:
         """Get the edgelist as a stream of pyarrow RecordBatches.
 
         Legacy ``marker1`` and ``marker2`` columns are renamed to
         ``marker_1`` and ``marker_2``, matching :meth:`to_polars`.
+
+        Args:
+            batch_size: Maximum number of rows per batch.
+            include_marker_sequences: When ``False``, leave out the
+                ``marker_sequence_1`` and ``marker_sequence_2`` columns.
         """
         components = normalize_input_to_list(self.components)
         with self._view.open() as session:
             adapter = LegacyMarkerQueryAdapter(session)
             yield from session.execute_arrow_reader(
-                query=self._edgelist_query(adapter, components),
+                query=self._edgelist_query(
+                    adapter, components, include_marker_sequences
+                ),
                 batch_size=batch_size,
             )
 
@@ -119,11 +131,18 @@ class Edgelist:
             for component in self.components:
                 yield (
                     component,
-                    session.execute_lazy(self._edgelist_query(adapter, [component])),
+                    session.execute_lazy(
+                        self._edgelist_query(
+                            adapter, [component], include_marker_sequences=False
+                        )
+                    ),
                 )
 
     def iterator(self) -> Iterable[Component]:
         """Get a stream of components and their graphs.
+
+        The ``marker_sequence_1`` and ``marker_sequence_2`` columns are left
+        out of the component frames. Use :meth:`to_polars` to get them.
 
         Returns:
             A stream of component names and associated graphs

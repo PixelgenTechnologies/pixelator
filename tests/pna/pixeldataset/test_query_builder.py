@@ -17,6 +17,21 @@ def test_edgelist_query_for_multiple_components_uses_in_clause():
     assert query.params == {"components": ["c1", "c2"]}
 
 
+def test_edgelist_query_selects_all_columns_by_default():
+    """Verify edgelist query keeps every column by default."""
+    query = QueryBuilder().edgelist_query(["c1"])
+    assert query.sql.startswith("SELECT * FROM edgelist")
+
+
+def test_edgelist_query_can_leave_out_marker_sequences():
+    """Verify edgelist query can leave out the marker sequence columns."""
+    query = QueryBuilder().edgelist_query(["c1"], include_marker_sequences=False)
+    assert (
+        "COLUMNS(c -> c NOT IN ('marker_sequence_1', 'marker_sequence_2'))" in query.sql
+    )
+    assert query.params == {"components": "c1"}
+
+
 def test_proximity_query_contains_marker_filter_when_markers_provided():
     """Verify proximity query contains marker filter when markers provided."""
     query = QueryBuilder().proximity_query(["c1"], ["M1", "M2"])

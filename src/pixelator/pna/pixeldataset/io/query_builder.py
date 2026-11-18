@@ -12,6 +12,8 @@ from pixelator.pna.analysis.analytical_proximity_query_helper import (
     jcs_with_analytical_stats,
 )
 
+MARKER_SEQUENCE_COLUMNS = ("marker_sequence_1", "marker_sequence_2")
+
 
 def quote_identifier(name: str) -> str:
     """Return ``name`` as a quoted SQL identifier."""
@@ -203,10 +205,24 @@ class QueryBuilder:
             params=self._normalize_list_param("components", components),
         )
 
-    def edgelist_query(self, components: list[str] | None) -> Query:
-        """Build an edgelist data query."""
+    def edgelist_query(
+        self, components: list[str] | None, include_marker_sequences: bool = True
+    ) -> Query:
+        """Build an edgelist data query.
+
+        Args:
+            components: Components to select, or ``None`` for all of them.
+            include_marker_sequences: When ``False``, leave out
+                ``marker_sequence_1`` and ``marker_sequence_2``. Edgelists
+                without these columns are returned unchanged.
+        """
+        columns = "*"
+        if not include_marker_sequences:
+            excluded = ", ".join(f"'{column}'" for column in MARKER_SEQUENCE_COLUMNS)
+            # Unlike EXCLUDE, a COLUMNS lambda does not fail on missing columns.
+            columns = f"COLUMNS(c -> c NOT IN ({excluded}))"
         return Query(
-            sql=f"""SELECT * FROM edgelist
+            sql=f"""SELECT {columns} FROM edgelist
                     WHERE {self._optimized_component_where_condition(components)}
                 """,
             params=self._normalize_components_param(components),

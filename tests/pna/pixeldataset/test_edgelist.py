@@ -7,13 +7,103 @@ import numpy as np
 import pandas as pd
 import polars as pl
 import pyarrow as pa
+import pytest
 
 from pixelator.pna.pixeldataset import Edgelist, PNAPixelDataset
 from pixelator.pna.pixeldataset.types import Component
+from tests.pna.conftest import create_pxl_file
 from tests.pna.pixeldataset.ann_data_test_helpers import (
     StubAnnDataHelper,
     make_test_adata,
 )
+
+MARKER_SEQUENCE_COLUMNS = {"marker_sequence_1", "marker_sequence_2"}
+
+
+@pytest.fixture(name="pxl_dataset_with_marker_sequences", scope="module")
+def pxl_dataset_with_marker_sequences_fixture(
+    tmp_path_factory, edgelist_dataframe, panel
+):
+    """A dataset whose edgelist has the marker sequence columns."""
+    tmp_dir = tmp_path_factory.mktemp("marker_sequences")
+    edgelist_path = tmp_dir / "edgelist.parquet"
+    edgelist_dataframe.with_columns(
+        marker_sequence_1=pl.lit("ACGTACGTAC"),
+        marker_sequence_2=pl.lit("TTTTGGGGCC"),
+    ).write_parquet(edgelist_path)
+    pxl_file = create_pxl_file(
+        target=tmp_dir / "file.pxl",
+        sample_name="test_sample",
+        edgelist_parquet_path=edgelist_path,
+        proximity_parquet_path=None,
+        layout_parquet_path=None,
+        panel=panel,
+    )
+    return PNAPixelDataset.from_pxl_files(pxl_file)
+
+
+class TestEdgelistMarkerSequences:
+    """Represent test edgelist marker sequences."""
+
+    def test_to_polars_keeps_marker_sequences(
+        self, pxl_dataset_with_marker_sequences: PNAPixelDataset
+    ):
+        """Verify to polars keeps the marker sequence columns.
+
+        Args:
+            pxl_dataset_with_marker_sequences: Pxl dataset with marker sequences.
+        """
+        df = pxl_dataset_with_marker_sequences.edgelist().to_polars()
+        assert MARKER_SEQUENCE_COLUMNS <= set(df.columns)
+
+    def test_iterator_leaves_out_marker_sequences(
+        self, pxl_dataset_with_marker_sequences: PNAPixelDataset
+    ):
+        """Verify iterator frames leave out the marker sequence columns.
+
+        Args:
+            pxl_dataset_with_marker_sequences: Pxl dataset with marker sequences.
+        """
+        items = list(pxl_dataset_with_marker_sequences.edgelist().iterator())
+        assert len(items) > 0
+        for item in items:
+            columns = set(item.frame.collect_schema().names())
+            assert not columns & MARKER_SEQUENCE_COLUMNS
+            assert {"umi1", "umi2", "marker_1", "marker_2", "component"} <= columns
+
+    @pytest.mark.parametrize("include", [True, False])
+    def test_to_record_batches_marker_sequences(
+        self, pxl_dataset_with_marker_sequences: PNAPixelDataset, include: bool
+    ):
+        """Verify to record batches includes marker sequences only when asked.
+
+        Args:
+            pxl_dataset_with_marker_sequences: Pxl dataset with marker sequences.
+            include: Whether to include the marker sequence columns.
+        """
+        batches = list(
+            pxl_dataset_with_marker_sequences.edgelist().to_record_batches(
+                include_marker_sequences=include
+            )
+        )
+        assert len(batches) > 0
+        for batch in batches:
+            has_sequences = MARKER_SEQUENCE_COLUMNS <= set(batch.schema.names)
+            assert has_sequences == include
+
+    def test_record_batches_without_marker_sequences_on_file_lacking_them(
+        self, pxl_dataset: PNAPixelDataset
+    ):
+        """Verify leaving out marker sequences works on files that never had them.
+
+        Args:
+            pxl_dataset: Pxl dataset.
+        """
+        with_all = list(pxl_dataset.edgelist().to_record_batches())
+        without = list(
+            pxl_dataset.edgelist().to_record_batches(include_marker_sequences=False)
+        )
+        assert [b.schema.names for b in without] == [b.schema.names for b in with_all]
 
 
 class TestEdgelistHelperInjection:

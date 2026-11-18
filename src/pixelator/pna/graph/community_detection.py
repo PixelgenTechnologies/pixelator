@@ -239,10 +239,11 @@ def refine_component(
         number of crossing edges removed during refinement, and the sizes of
         the discarded components after refinement.
     """
+    component_path = f"{str(component_edgelists_path)}/component={component_id}"
     with connect_duckdb(config=duckdb_config) as con:
         edgelist = con.execute(f"""
-            SELECT *
-            FROM read_parquet('{str(component_edgelists_path)}/component={component_id}', hive_partitioning = true)
+            SELECT umi1, umi2
+            FROM read_parquet('{component_path}', hive_partitioning = true)
         """).pl()
         _, leiden_communities = leiden(
             edgelist.select(pl.col("umi1").cast(pl.Utf8), pl.col("umi2").cast(pl.Utf8))
@@ -299,17 +300,25 @@ def refine_component(
             all_comp_sizes >= refinement_options.min_component_size_to_prune
         ]
 
-        edgelist = (
-            edgelist.filter(pl.col("new_comp1") == pl.col("new_comp2"))
-            .with_columns(component=pl.col("new_comp1"))
-            .filter(pl.col("component").is_in(comp_sizes.index.to_list()))
-            .drop(["new_comp2", "new_comp1"])
-        )
-
-        con.execute(
-            f"COPY (SELECT * FROM edgelist ORDER BY component) TO '{str(component_edgelists_path)}' (FORMAT PARQUET, PARTITION_BY (component), OVERWRITE_OR_IGNORE)"
-        )
-        shutil.rmtree(f"{str(component_edgelists_path)}/component={component_id}")
+        # Only UMIs of kept communities are mapped, so the inner joins also drop
+        # edges touching a pruned community.
+        kept_umi_communities = pl_community_serie.filter(
+            pl.col("community").is_in(comp_sizes.index.to_list())
+        ).rename({"index": "umi"})
+        con.register("kept_umi_communities", kept_umi_communities.to_arrow())
+        # Re-read from parquet so wide columns (e.g. marker sequences) never
+        # reach Python memory.
+        con.execute(f"""
+            COPY (
+                SELECT e.* REPLACE (c1.community AS component)
+                FROM read_parquet('{component_path}', hive_partitioning = true) e
+                JOIN kept_umi_communities c1 ON e.umi1 = c1.umi
+                JOIN kept_umi_communities c2 ON e.umi2 = c2.umi
+                WHERE c1.community = c2.community
+                ORDER BY component
+            ) TO '{str(component_edgelists_path)}' (FORMAT PARQUET, PARTITION_BY (component), OVERWRITE_OR_IGNORE)
+        """)
+        shutil.rmtree(component_path)
 
     return comp_sizes, n_removed_edges, discard_sizes
 

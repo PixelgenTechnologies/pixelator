@@ -79,7 +79,7 @@ class CreateLayout(PerComponentTask):
         edgelist = (
             self.pxl_dataset.filter(components=[component_id])  # type: ignore
             .edgelist()
-            .to_record_batches()
+            .to_record_batches(include_marker_sequences=False)
         )
         res = self.run_on_component_edgelist(edgelist, component_id)
         return res

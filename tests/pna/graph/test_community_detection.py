@@ -6,10 +6,13 @@ from unittest.mock import MagicMock, patch
 
 import polars as pl
 import pytest
+from polars.testing import assert_frame_equal
 
 from pixelator.pna.graph.community_detection import (
+    RefinementOptions,
     StagedRefinementOptions,
     calculate_post_recovery_component_statistics,
+    refine_component,
     run_leiden_refinement,
 )
 from pixelator.pna.graph.component_recovery_utils import (
@@ -123,6 +126,57 @@ def test_calculate_post_recovery_component_statistics_with_real_discarded_frame(
 
     assert out.component_count_post_recovery == 3
     assert out.edge_count_post_recovery == 5
+
+
+def test_refine_component_splits_on_crossing_edge_and_keeps_all_columns(
+    tmp_path: Path,
+):
+    """Two dense blocks joined by one bridge edge are split, and no column is dropped."""
+    block_a = [(u1, u2) for u1 in range(1, 21) for u2 in range(101, 121)]
+    block_b = [(u1, u2) for u1 in range(21, 41) for u2 in range(121, 141)]
+    bridge = [(1, 121)]
+    edges = block_a + block_b + bridge
+    edgelist = pl.DataFrame(
+        {
+            "marker_1": ["CD3"] * len(edges),
+            "marker_2": ["CD4"] * len(edges),
+            "umi1": pl.Series([u1 for u1, _ in edges], dtype=pl.UInt64),
+            "umi2": pl.Series([u2 for _, u2 in edges], dtype=pl.UInt64),
+            "marker_sequence_1": [f"SEQ1_{u1}" for u1, _ in edges],
+            "marker_sequence_2": [f"SEQ2_{u2}" for _, u2 in edges],
+            "read_count": pl.Series([1] * len(edges), dtype=pl.UInt32),
+        }
+    )
+    partitions = tmp_path / "edgelists"
+    (partitions / "component=comp").mkdir(parents=True)
+    edgelist.write_parquet(partitions / "component=comp" / "data_0.parquet")
+
+    comp_sizes, n_removed_edges, discard_sizes = refine_component(
+        component_id="comp",
+        component_edgelists_path=partitions,
+        refinement_options=RefinementOptions(
+            max_edges_to_remove=None,
+            max_edges_to_remove_relative=None,
+            leiden_resolution=1.0,
+            min_component_size_to_prune=1,
+        ),
+    )
+
+    assert n_removed_edges == 1
+    assert sorted(comp_sizes.to_list()) == [40, 40]
+    assert discard_sizes.empty
+    assert not (partitions / "component=comp").exists()
+
+    result = pl.read_parquet(partitions, hive_partitioning=True)
+    assert set(result.columns) == set(edgelist.columns) | {"component"}
+    assert result["component"].n_unique() == 2
+    assert result["component"].str.starts_with("comp_").all()
+    expected = edgelist.filter(~((pl.col("umi1") == 1) & (pl.col("umi2") == 121)))
+    assert_frame_equal(
+        result.drop("component").select(edgelist.columns),
+        expected,
+        check_row_order=False,
+    )
 
 
 @patch("pixelator.pna.utils.duckdb_utils.duckdb.connect")
