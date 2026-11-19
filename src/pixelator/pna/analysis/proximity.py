@@ -74,8 +74,9 @@ def jcs_with_analytical_stats_from_edgelist(
     """Compute join counts augmented with analytically calculated expected statistics.
 
     The expected join counts and their standard deviations are calculated
-    exactly under the null model where the markers of the umi1 and umi2 nodes are
-    independently permuted within a component (see `jcs_with_analytical_stats`).
+    exactly under the null model where the `marker_1` and `marker_2` labels are
+    independently permuted across the edges of a component (see
+    `jcs_with_analytical_stats`).
 
     Args:
         edgelist: A DataFrame representing the edgelist of a single component.
