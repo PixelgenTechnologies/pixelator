@@ -44,6 +44,7 @@ class TestPixelFileWriter:
             monkeypatch: pytest monkeypatch fixture.
         """
         monkeypatch.delenv("PIXELATOR_DUCKDB_TEMP_DIR", raising=False)
+        monkeypatch.delenv("TMPDIR", raising=False)
         target = tmp_path / "file.pxl"
         with PixelFileWriter(target) as writer:
             setting = (
