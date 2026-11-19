@@ -9,7 +9,7 @@ tasks:
 
       This allows running tests agains multiple python version easily
     vars:
-      TOXENV: '{{ .TOXENV | default "py311" }}'
+      TOXENV: '{{ .TOXENV | default "py312" }}'
 
     cmds:
       - tox -e {{ .TOXENV }}

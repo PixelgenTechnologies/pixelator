@@ -1,9 +1,11 @@
 """Copyright © 2026 Pixelgen Technologies AB."""
 
+from pathlib import Path
+
 import duckdb
 import pytest
 
-from pixelator.common.duckdb_utils import connect_duckdb
+from pixelator.common.duckdb_utils import connect_duckdb, resolve_duckdb_temp_dir
 
 
 def _threads(con) -> int:
@@ -22,6 +24,24 @@ def test_connect_duckdb_threads_from_env(monkeypatch, env_threads, config, expec
     monkeypatch.setenv("PIXELATOR_DUCKDB_THREADS", env_threads)
     with connect_duckdb(config=config) as con:
         assert _threads(con) == expected
+
+
+def test_resolve_duckdb_temp_dir_fallback_order(monkeypatch, tmp_path):
+    """Explicit path, then PIXELATOR_DUCKDB_TEMP_DIR, then TMPDIR, then /tmp."""
+    explicit = tmp_path / "explicit"
+    pixelator = tmp_path / "pixelator"
+    tmpdir = tmp_path / "tmpdir"
+
+    monkeypatch.setenv("PIXELATOR_DUCKDB_TEMP_DIR", str(pixelator))
+    monkeypatch.setenv("TMPDIR", str(tmpdir))
+    assert resolve_duckdb_temp_dir(explicit) == explicit
+    assert resolve_duckdb_temp_dir() == pixelator
+
+    monkeypatch.delenv("PIXELATOR_DUCKDB_TEMP_DIR")
+    assert resolve_duckdb_temp_dir() == tmpdir
+
+    monkeypatch.delenv("TMPDIR")
+    assert resolve_duckdb_temp_dir() == Path("/tmp")
 
 
 def test_connect_duckdb_threads_unset_keeps_duckdb_default(monkeypatch):
