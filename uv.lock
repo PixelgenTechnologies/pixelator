@@ -1220,8 +1220,8 @@ docs = [
 
 [[package]]
 name = "pixelgen-pixelator-core"
-version = "1.0.2"
-source = { git = "https://github.com/PixelgenTechnologies/pixelator-core?subdirectory=packages%2Fpython_bindings&branch=feature%2Fpna-3683_batch_graph_collapse#2f3d85019e3381542b238f40b27121bc46b937fa" }
+version = "2.0.0"
+source = { git = "https://github.com/PixelgenTechnologies/pixelator-core?subdirectory=packages%2Fpython_bindings&branch=feature%2Fpna-3683_batch_graph_collapse#cf7d70d144c5288fb1087e6db69f0dd92107d2e0" }
 
 [[package]]
 name = "platformdirs"
