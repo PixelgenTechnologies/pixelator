@@ -326,6 +326,7 @@ def run_graph_collapse(
     memory_limit: int | None = None,
     temp_directory: str | Path | None = None,
     batch_edges: int = DEFAULT_BATCH_EDGES,
+    markers: list[str] | None = None,
 ) -> GraphCollapseResult:
     """Collapse the edgelist of ``input_pxl_file`` into a new pxl file at ``output_path``.
 
@@ -355,6 +356,9 @@ def run_graph_collapse(
         temp_directory: DuckDB spill directory. Defaults to
             ``PIXELATOR_DUCKDB_TEMP_DIR`` or ``/tmp``.
         batch_edges: Number of edges a batch of components is filled to.
+        markers: The markers to count in the rebuilt AnnData, in ``var`` order.
+            Pass the input's ``var_names`` when the caller has already read its
+            AnnData; read from the input when ``None``.
 
     Returns:
         Counts and, when requested, the collapsed-sequence rows.
@@ -365,7 +369,8 @@ def run_graph_collapse(
     # removed by sample calling) back. The panel comes from the file only.
     input_dataset = read(input_pxl_file.path)
     panel = PNAAntibodyPanel.from_pxl_dataset(input_dataset)
-    markers = list(input_dataset.adata().var_names)
+    if markers is None:
+        markers = list(input_dataset.adata().var_names)
 
     stats_total: Counter = Counter()
     bfs_distances: Counter = Counter()

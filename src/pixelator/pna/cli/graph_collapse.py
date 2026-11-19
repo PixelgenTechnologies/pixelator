@@ -183,8 +183,11 @@ def graph_collapse(
             null_reason=exc.reason,
         ).write_json_file(metrics_file, indent=4)
         return
-    reads_input = int(input_dataset.adata().obs["reads_in_component"].sum())
-    umis_input = int(input_dataset.adata().obs["n_umi"].sum())
+    input_adata = input_dataset.adata()
+    reads_input = int(input_adata.obs["reads_in_component"].sum())
+    umis_input = int(input_adata.obs["n_umi"].sum())
+    markers = list(input_adata.var_names)
+    del input_adata
 
     result = run_graph_collapse(
         input_pxl_file,
@@ -198,11 +201,11 @@ def graph_collapse(
         report_collapsed_sequences=report_collapsed_sequences,
         memory_limit=memory,
         temp_directory=ctx.obj.get("DUCKDB_TEMP_DIR"),
+        markers=markers,
     )
-    collapsed_dataset = read(output_path)
-
-    reads_output = int(collapsed_dataset.adata().obs["reads_in_component"].sum())
-    umis_output = int(collapsed_dataset.adata().obs["n_umi"].sum())
+    collapsed_obs = read(output_path).adata().obs
+    reads_output = int(collapsed_obs["reads_in_component"].sum())
+    umis_output = int(collapsed_obs["n_umi"].sum())
 
     collapsed_sequences_file = None
     if report_collapsed_sequences:
