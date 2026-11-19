@@ -49,8 +49,9 @@ COPY --from=build-pixelator /opt/python /opt/python
 
 # The interpreter bin is first on PATH, so `python`, `python3` and `python3.14`
 # all resolve to it. /usr/bin links cover callers that invoke those paths directly
-# (Nextflow and nf-core samplesheet checks).
+# (Nextflow, nf-core samplesheet checks, and the prod image entrypoint).
 ENV PATH="/opt/python/prefix/bin:${PATH}"
 RUN ln -sfn /opt/python/prefix/bin/python /usr/bin/python \
     && ln -sfn /opt/python/prefix/bin/python3 /usr/bin/python3 \
-    && ln -sfn /opt/python/prefix/bin/python3.14 /usr/bin/python3.14
+    && ln -sfn /opt/python/prefix/bin/python3.14 /usr/bin/python3.14 \
+    && ln -sfn /opt/python/prefix/bin/pixelator /usr/bin/pixelator
