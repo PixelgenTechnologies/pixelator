@@ -69,23 +69,20 @@ _MAX_REPORTED_OVERLAPS = 10
 
 
 def _check_sources_are_disjoint(parts: list[tuple[PanelSource, pd.DataFrame]]) -> None:
-    """Raise when two sources share a marker id or a sequence.
+    """Raise when two sources share a sequence.
 
-    Sources are told apart by position, so the same panel given twice is
-    reported too. A marker id that repeats within one source is not an overlap.
+    Marker ids may repeat, across sources as well as within one. Sources are
+    told apart by position, so the same panel given twice is reported too.
     """
     owners: dict[tuple[str, str], int] = {}
     overlaps = []
     for index, (source, frame) in enumerate(parts):
-        keys = list(
-            dict.fromkeys(("marker_id", str(marker_id)) for marker_id in frame.index)
-        )
         for column in _UNIQUE_COLUMNS:
-            keys.extend((column, str(value)) for value in frame[column])
-        for key in keys:
-            owner = owners.setdefault(key, index)
-            if owner != index:
-                overlaps.append((key, owner, index))
+            for value in frame[column]:
+                key = (column, str(value))
+                owner = owners.setdefault(key, index)
+                if owner != index:
+                    overlaps.append((key, owner, index))
     if not overlaps:
         return
 
@@ -100,8 +97,7 @@ def _check_sources_are_disjoint(parts: list[tuple[PanelSource, pd.DataFrame]]) -
     if len(overlaps) > _MAX_REPORTED_OVERLAPS:
         lines.append(f"and {len(overlaps) - _MAX_REPORTED_OVERLAPS} more")
     raise ValueError(
-        "Panels to concatenate must not share a marker id or a sequence:\n"
-        + "\n".join(lines)
+        "Panels to concatenate must not share a sequence:\n" + "\n".join(lines)
     )
 
 
@@ -339,15 +335,19 @@ class PNAAntibodyPanel:
 
         One panel is returned unchanged. Several panels are stacked in the
         given order. The result keeps every input source.
-        ``marker_id``, ``sequence_1``, and ``sequence_2`` must be unique
-        across the concatenation, otherwise a ``ValueError`` names the sources
-        that share them. A column present on only some sources is
+        ``sequence_1`` and ``sequence_2`` must be unique across the
+        concatenation, otherwise a ``ValueError`` names the sources that share
+        them. A marker id may appear in several sources, and its rows must then
+        agree on every column except the row-level ones, see
+        :func:`validate_antibody_panel`. A column present on only some sources is
         blank on the others, the same as an empty cell in a panel CSV.
         Each source still remembers the columns it was loaded with.
 
         Raises:
-            ValueError: If no panel is given, or if two sources share a marker
-                id or a sequence.
+            ValueError: If no panel is given, or if two sources share a
+                sequence.
+            AssertionError: If rows sharing a marker id disagree on a column
+                that must be the same.
         """
         if not panels:
             raise ValueError("At least one panel is required to concatenate.")
