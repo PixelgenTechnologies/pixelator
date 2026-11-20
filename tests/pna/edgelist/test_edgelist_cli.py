@@ -83,6 +83,20 @@ def test_edgelist_paired_run_writes_parquet(edgelist_cli_run):
     assert df.height > 0
 
 
+def test_edgelist_stores_one_panel_sequence_per_marker(edgelist_cli_run):
+    """Each marker carries its panel sequence, the same on every row."""
+    _, _, df = edgelist_cli_run
+    for marker, sequence in (
+        ("marker_1", "marker_sequence_1"),
+        ("marker_2", "marker_sequence_2"),
+    ):
+        assert df[sequence].null_count() == 0
+        assert df[sequence].cast(pl.String).str.contains("^[ACGT]+$").all()
+        assert (
+            df.group_by(marker).agg(pl.col(sequence).n_unique())[sequence] == 1
+        ).all()
+
+
 def test_edgelist_output_names_follow_the_input_fastq(edgelist_cli_run):
     """Paired outputs keep the FASTQ basename with the R1/R2 suffix removed."""
     stage_dir, payload, _ = edgelist_cli_run

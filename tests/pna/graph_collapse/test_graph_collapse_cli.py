@@ -134,7 +134,7 @@ def test_graph_collapse_cli_report_collapsed_sequences(graph_pxl_file):
 
 
 def test_graph_collapse_cli_memory_limit_reaches_duckdb(graph_pxl_file, monkeypatch):
-    """--memory is a soft DuckDB limit, applied to the read and the writer connection."""
+    """--memory is a soft DuckDB limit, applied to the connection that writes the output."""
     pxl_path = graph_pxl_file
     seen = []
 
@@ -175,7 +175,7 @@ def test_graph_collapse_cli_memory_limit_reaches_duckdb(graph_pxl_file, monkeypa
 
     assert cmd.exit_code == 0, cmd.output
     # 2G is 2000000000 bytes, which init_duckdb_conn expresses as 2000 MiB.
-    assert seen == ["1.9 GiB", "1.9 GiB"]
+    assert seen == ["1.9 GiB"]
 
 
 def test_graph_collapse_cli_rejects_an_unparseable_memory_limit(graph_pxl_file):
@@ -228,3 +228,37 @@ def test_graph_collapse_cli_hamming_threshold_zero_collapses_nothing(graph_pxl_f
         assert report["hamming_distance_distribution"] == {}
         assert report["nodes_collapsed"] == 0
         assert report["umis_output"] == report["umis_input"]
+
+
+def test_graph_collapse_cli_reads_each_anndata_once(graph_pxl_file, monkeypatch):
+    """The input and the output AnnData are each read once, not once per use."""
+    import pixelator.pna.pixeldataset.io.anndata_helper as anndata_helper
+
+    reads = []
+    original = anndata_helper.update_metrics_anndata
+
+    def counting_update_metrics(adata, *args, **kwargs):
+        reads.append(adata.n_obs)
+        return original(adata, *args, **kwargs)
+
+    monkeypatch.setattr(
+        anndata_helper, "update_metrics_anndata", counting_update_metrics
+    )
+
+    runner = CliRunner()
+    with tempfile.TemporaryDirectory() as d:
+        cmd = runner.invoke(
+            cli.main_cli,
+            [
+                "single-cell-pna",
+                "graph-collapse",
+                str(graph_pxl_file),
+                "--output",
+                d,
+                "--design",
+                "proxiome-v1",
+            ],
+        )
+
+    assert cmd.exit_code == 0, cmd.output
+    assert len(reads) == 2

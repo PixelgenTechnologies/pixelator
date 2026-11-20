@@ -12,6 +12,11 @@ FROM runtime-base AS build-pixelator
 # git is needed by hatch-vcs to derive the package version
 RUN microdnf install -y git && microdnf clean all
 
+# TODO: Remove once pixelgen-pixelator-core is installed from a released wheel
+# again. Until then it is built from a git branch, which needs a Rust toolchain
+# and a C linker.
+RUN microdnf install -y rust cargo gcc && microdnf clean all
+
 COPY --from=ghcr.io/astral-sh/uv:0.13 /uv /bin/uv
 
 # Pin the patch so the image does not float when uv's default 3.14 moves.
