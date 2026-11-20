@@ -20,6 +20,7 @@ from pixelator.pna.anndata import pna_edgelist_to_anndata
 from pixelator.pna.config import pna_config
 from pixelator.pna.config.panel import (
     ORIGINAL_HASH_COUNTS_PREFIX,
+    ROW_COLUMNS,
     PanelConflictError,
     PNAAntibodyPanel,
 )
@@ -497,7 +498,7 @@ class TestAnnDataAlignment:
         adata = _read_adata(old_file)
 
         assert sorted(adata.var_names) == ["CD3", "CD4"]
-        assert adata.var.loc["CD3", "sequence_1"] == "AAAA"
+        assert not set(ROW_COLUMNS) & set(adata.var.columns)
 
     def test_files_storing_the_panel_in_var_align_with_files_using_panel_tables(
         self, tmp_path, new_file
@@ -513,7 +514,7 @@ class TestAnnDataAlignment:
         adata = _read_adata(legacy, new_file)
 
         assert sorted(adata.var_names) == ["CD3E", "CD4"]
-        assert adata.var["sequence_1"].to_dict() == {"CD3E": "AAAA", "CD4": "CCCC"}
+        assert not set(ROW_COLUMNS) & set(adata.var.columns)
         assert not adata.var.columns.duplicated().any()
 
 
@@ -562,11 +563,19 @@ class TestMarkerConflicts:
         assert dataset.view.marker_renames() == {}
 
     def test_force_loads_the_files_with_the_newest_panel_row(self, tmp_path, caplog):
+        def panel(version: str, sequence: str, control: bool) -> PNAAntibodyPanel:
+            # the control flag of CD3 tells which panel the aligned row comes from
+            rows = [
+                {**_marker("CD3", sequence), "control": control},
+                _marker("CD4", "CCCC"),
+            ]
+            return _panel_of_rows(version, rows)
+
         files = [
             _write_pxl(
                 tmp_path / f"{sample}.pxl",
                 sample,
-                _panel("1.0.0", {"CD3": sequence, "CD4": "CCCC"}),
+                panel("1.0.0", sequence, control=False),
                 ("CD3", "CD4"),
             )
             for sample, sequence in (("old", "AAAA"), ("new", "GGGG"))
@@ -575,7 +584,7 @@ class TestMarkerConflicts:
         newer = _write_pxl(
             tmp_path / "newer.pxl",
             "newer",
-            _panel("1.0.1", {"CD3": "TTTT", "CD4": "CCCC"}),
+            panel("1.0.1", "TTTT", control=True),
             ("CD3", "CD4"),
         )
         viewer = PixelDataViewer.from_files([newer, *files], force=True)
@@ -585,7 +594,7 @@ class TestMarkerConflicts:
 
         assert "marker id 'CD3'" in caplog.text
         assert sorted(adata.obs_names) == ["new", "newer", "old"]
-        assert adata.var.loc["CD3", "sequence_1"] == "TTTT"
+        assert adata.var.loc["CD3", "control"]
 
     def test_the_version_error_still_falls_back_with_a_warning(
         self, old_file, tmp_path, caplog
@@ -705,7 +714,6 @@ class TestJoinWithMarkersOnlyInTheFirstSample:
             adata = _read_adata(*files, join="inner")
 
         assert list(adata.var_names) == ["CD3"]
-        assert adata.var.loc["CD3", "sequence_1"] == "AAAA"
         assert "are dropped (1): CD19" in caplog.text
 
     def test_the_outer_join_keeps_all_markers_and_counts_missing_ones_as_zero(
@@ -721,8 +729,6 @@ class TestJoinWithMarkersOnlyInTheFirstSample:
             adata = _read_adata(*files, join="outer")
 
         assert set(adata.var_names) == {"CD3", "CD19", "CD20"}
-        assert adata.var.loc["CD19", "sequence_1"] == "CCCC"
-        assert adata.var.loc["CD20", "sequence_1"] == "GGGG"
         assert not np.isnan(adata.X).any()
         # each add-on marker is only in one of the two samples
         assert adata.var.loc[["CD19", "CD20"], "components"].tolist() == [1, 1]

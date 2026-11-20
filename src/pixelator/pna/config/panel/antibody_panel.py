@@ -12,6 +12,7 @@ from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional, Sequence
 
+import numpy as np
 from anndata import AnnData
 
 try:
@@ -34,6 +35,7 @@ from pixelator.pna.config.panel.validation import (
     _INDEX_COLUMN_TYPE,
     _REQUIRED_COLUMNS,
     _UNIQUE_COLUMNS,
+    ROW_COLUMNS,
     validate_antibody_panel,
 )
 
@@ -67,21 +69,20 @@ _MAX_REPORTED_OVERLAPS = 10
 
 
 def _check_sources_are_disjoint(parts: list[tuple[PanelSource, pd.DataFrame]]) -> None:
-    """Raise when two sources share a marker id or a sequence.
+    """Raise when two sources share a sequence.
 
-    Sources are told apart by position, so the same panel given twice is
-    reported too.
+    Marker ids may repeat, across sources as well as within one. Sources are
+    told apart by position, so the same panel given twice is reported too.
     """
     owners: dict[tuple[str, str], int] = {}
     overlaps = []
     for index, (source, frame) in enumerate(parts):
-        keys = [("marker_id", str(marker_id)) for marker_id in frame.index]
         for column in _UNIQUE_COLUMNS:
-            keys.extend((column, str(value)) for value in frame[column])
-        for key in keys:
-            owner = owners.setdefault(key, index)
-            if owner != index:
-                overlaps.append((key, owner, index))
+            for value in frame[column]:
+                key = (column, str(value))
+                owner = owners.setdefault(key, index)
+                if owner != index:
+                    overlaps.append((key, owner, index))
     if not overlaps:
         return
 
@@ -96,8 +97,7 @@ def _check_sources_are_disjoint(parts: list[tuple[PanelSource, pd.DataFrame]]) -
     if len(overlaps) > _MAX_REPORTED_OVERLAPS:
         lines.append(f"and {len(overlaps) - _MAX_REPORTED_OVERLAPS} more")
     raise ValueError(
-        "Panels to concatenate must not share a marker id or a sequence:\n"
-        + "\n".join(lines)
+        "Panels to concatenate must not share a sequence:\n" + "\n".join(lines)
     )
 
 
@@ -120,18 +120,25 @@ class PNAAntibodyPanel:
         """Build a panel from a marker table and the sources that contributed it.
 
         Args:
-            df: Marker table, indexed by marker id.
+            df: Marker table, indexed by marker id. Several rows may share a
+                marker id, see :func:`validate_antibody_panel`.
             sources: Panel files that contributed markers, in source-index order.
-            marker_source_ids: Source index for each marker.
+            marker_source_ids: Source index for each row of ``df``, in the same
+                order. It is read by position, because a marker id can repeat.
             file_name: Basename of the file this panel was loaded from.
             filepath: Full path of the file this panel was loaded from.
 
         Raises:
-            ValueError: If no source is given.
+            ValueError: If no source is given, or ``marker_source_ids`` does
+                not have one value per row of ``df``.
             AssertionError: If the marker table fails panel validation.
         """
         if not sources:
             raise ValueError("A panel needs at least one source.")
+        if len(marker_source_ids) != len(df):
+            raise ValueError(
+                "marker_source_ids needs one value per row of the marker table."
+            )
         self._filename = file_name
         self._filepath = Path(filepath).resolve() if filepath else None
         self._df = df
@@ -328,15 +335,19 @@ class PNAAntibodyPanel:
 
         One panel is returned unchanged. Several panels are stacked in the
         given order. The result keeps every input source.
-        ``marker_id``, ``sequence_1``, and ``sequence_2`` must be unique
-        across the concatenation, otherwise a ``ValueError`` names the sources
-        that share them. A column present on only some sources is
+        ``sequence_1`` and ``sequence_2`` must be unique across the
+        concatenation, otherwise a ``ValueError`` names the sources that share
+        them. A marker id may appear in several sources, and its rows must then
+        agree on every column except the row-level ones, see
+        :func:`validate_antibody_panel`. A column present on only some sources is
         blank on the others, the same as an empty cell in a panel CSV.
         Each source still remembers the columns it was loaded with.
 
         Raises:
-            ValueError: If no panel is given, or if two sources share a marker
-                id or a sequence.
+            ValueError: If no panel is given, or if two sources share a
+                sequence.
+            AssertionError: If rows sharing a marker id disagree on a column
+                that must be the same.
         """
         if not panels:
             raise ValueError("At least one panel is required to concatenate.")
@@ -359,10 +370,13 @@ class PNAAntibodyPanel:
         )
         return cls(df, sources, source_ids)
 
+    def _source_mask(self, source_index: int) -> np.ndarray:
+        """Return a mask over the rows of ``df`` that belong to one source."""
+        return (self.marker_source_ids == source_index).to_numpy()
+
     def _source_rows(self, source_index: int) -> pd.DataFrame:
         """Return the marker rows that belong to one source."""
-        markers = self.marker_source_ids.index[self.marker_source_ids == source_index]
-        return self.df.loc[markers]
+        return self.df[self._source_mask(source_index)]
 
     def _single_metadata(self) -> AntibodyPanelMetadata | None:
         """Return metadata when this panel has exactly one source."""
@@ -455,7 +469,7 @@ class PNAAntibodyPanel:
 
     @property
     def marker_source_ids(self) -> pd.Series:
-        """Return the panel-source index of each marker."""
+        """Return the panel-source index of each row of ``df``, in the same order."""
         return self._marker_source_ids
 
     @property
@@ -490,8 +504,18 @@ class PNAAntibodyPanel:
 
     @cached_property
     def markers_control(self) -> List[str]:
-        """Return a list of marker control (names)."""
-        return list(self._df[self._df["control"]].index)
+        """Return the list of unique marker control (names)."""
+        return list(self._df[self._df["control"]].index.unique())
+
+    def marker_table(self) -> pd.DataFrame:
+        """Return one row per marker id, in panel order.
+
+        The columns that describe a single row (``sequence_1``, ``sequence_2``
+        and ``sample_hashing``) are left out, since a marker id can have several
+        rows. The remaining columns are the same on every row of a marker.
+        """
+        table = self._df.drop(columns=list(ROW_COLUMNS), errors="ignore")
+        return table[~table.index.duplicated()]
 
     @cached_property
     def markers(self) -> List[str]:
@@ -552,15 +576,15 @@ class PNAAntibodyPanel:
             raise ValueError("Source index must be zero or greater.")
         if len(replacement.sources) != 1:
             raise ValueError("Replacement panel must come from a single source.")
-        keep = self.marker_source_ids.index[self.marker_source_ids != source_index]
-        kept = self.df.loc[list(keep)]
+        keep = ~self._source_mask(source_index)
+        kept = self.df[keep]
         if kept.empty:
             df = replacement.df.copy()
         else:
             df = _stack_marker_tables([kept, replacement.df])
         source_ids = pd.concat(
             [
-                self.marker_source_ids.loc[list(keep)],
+                self.marker_source_ids[keep],
                 pd.Series(source_index, index=replacement.df.index, dtype="int64"),
             ]
         )
@@ -607,9 +631,7 @@ class PNAAntibodyPanel:
         for source_index, source in enumerate(self.sources):
             marker_ids = frozenset(
                 str(marker_id)
-                for marker_id in self.marker_source_ids.index[
-                    self.marker_source_ids == source_index
-                ]
+                for marker_id in self.df.index[self._source_mask(source_index)]
             )
             groups.append((source.metadata, marker_ids))
         return sorted(
@@ -631,8 +653,10 @@ class PNAAntibodyPanel:
             raise ValueError("Can only compare with another PNAAntibodyPanel")
         if self._source_marker_groups() != other._source_marker_groups():
             return False
-        left = self.df.sort_index()
-        right = other.df.sort_index()
+        # sequence_1 is unique, so sorting on it first fixes the order of the
+        # rows that share a marker id
+        left = self.df.sort_values("sequence_1").sort_index(kind="stable")
+        right = other.df.sort_values("sequence_1").sort_index(kind="stable")
         if set(left.columns) != set(right.columns):
             return False
         return left.equals(right[list(left.columns)])

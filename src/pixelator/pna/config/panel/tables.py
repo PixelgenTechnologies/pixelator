@@ -76,9 +76,7 @@ def write_panel_tables(
     markers = panel.df.copy()
     markers.insert(0, "marker_id", markers.index.astype(str))
     markers.insert(0, "row_nr", range(len(markers)))
-    markers["source_id"] = (
-        panel.marker_source_ids.reindex(panel.df.index).astype(int).to_numpy()
-    )
+    markers["source_id"] = panel.marker_source_ids.astype(int).to_numpy()
 
     markers = markers.reset_index(drop=True)
 

@@ -11,7 +11,7 @@ import pytest
 from anndata import AnnData
 
 from pixelator.common.config import AntibodyPanelMetadata
-from pixelator.pna.config.panel import PNAAntibodyPanel
+from pixelator.pna.config.panel import ROW_COLUMNS, PNAAntibodyPanel
 from pixelator.pna.config.panel.tables import (
     has_panel_tables,
     panel_tables_present,
@@ -100,6 +100,22 @@ def test_hashing_clones_round_trip(tmp_path: Path):
 
     assert loaded == panel
     assert sorted(loaded.hashing_marker_ids) == ["B2M-1", "B2M-2"]
+
+
+def test_a_panel_with_repeated_marker_ids_round_trips(tmp_path: Path):
+    base = _panel(
+        "base",
+        "1.0.0",
+        [_marker("CD3", "AAAA"), _marker("CD3", "CCCC"), _marker("CD4", "GGGG")],
+    )
+    addon = _panel("addon", "2.0.0", [_marker("CD19", "TTTT")])
+    panel = PNAAntibodyPanel.concatenate([base, addon])
+
+    loaded = _store_and_load(tmp_path / "sample.pxl", panel)
+
+    assert loaded == panel
+    assert list(loaded.df["sequence_1"]) == ["AAAA", "CCCC", "GGGG", "TTTT"]
+    assert list(loaded.marker_source_ids) == [0, 0, 0, 1]
 
 
 def test_writing_a_panel_again_replaces_the_stored_one(tmp_path: Path):
@@ -214,5 +230,35 @@ def test_stored_panel_columns_are_joined_back_onto_var(tmp_path: Path):
     adata = read(path).adata(add_clr_transform=False, add_log1p_transform=False)
 
     assert adata.var.loc["CD3", "uniprot_id"] == "P01730"
-    assert adata.var.loc["CD3", "sequence_1"] == "AAAA"
     assert "panel_metadata" not in adata.uns
+
+
+def test_var_has_no_columns_describing_a_single_panel_row(tmp_path: Path):
+    panel = _panel("base", "1.0.0", [_marker("CD3", "AAAA", sample_hashing="")])
+    path = tmp_path / "sample.pxl"
+    _write_pxl(path, panel, ["CD3"])
+
+    adata = read(path).adata(add_clr_transform=False, add_log1p_transform=False)
+
+    assert not set(ROW_COLUMNS) & set(adata.var.columns)
+    assert "control" in adata.var.columns
+
+
+def test_a_panel_with_repeated_marker_ids_is_read_as_adata(tmp_path: Path):
+    panel = _panel(
+        "base",
+        "1.0.0",
+        [
+            _marker("CD3", "AAAA", uniprot_id="P07766"),
+            _marker("CD3", "CCCC", uniprot_id="P07766"),
+            _marker("CD4", "GGGG", uniprot_id="P01730"),
+        ],
+    )
+    path = tmp_path / "sample.pxl"
+    _write_pxl(path, panel, ["CD3", "CD4"])
+
+    adata = read(path).adata(add_clr_transform=False, add_log1p_transform=False)
+
+    assert list(adata.var_names) == ["CD3", "CD4"]
+    assert adata.var["uniprot_id"].to_dict() == {"CD3": "P07766", "CD4": "P01730"}
+    assert not set(ROW_COLUMNS) & set(adata.var.columns)
