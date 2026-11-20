@@ -5,7 +5,7 @@ description = "A command-line tool and library to process and analyze data gener
 authors = [
     { name = "Pixelgen Technologies AB", email = "developers@pixelgen.com" },
 ]
-requires-python = ">=3.12,<3.14"
+requires-python = ">=3.12,<3.15"
 readme = "README.md"
 license = "MIT"
 maintainers = [
@@ -29,6 +29,7 @@ classifiers = [
     "Natural Language :: English",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 
 dependencies = [
