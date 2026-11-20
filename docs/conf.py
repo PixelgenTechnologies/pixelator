@@ -173,7 +173,7 @@ intersphinx_mapping = {
     "polars": ("https://docs.pola.rs/api/python/stable/", None),
     "pydantic": ("https://docs.pydantic.dev/latest/", None),
     "scanpy": ("https://scanpy.readthedocs.io/en/stable/", None),
-    "anndata": ("https://anndata.readthedocs.io/en/stable/", None),
+    "anndata": ("https://anndata.scverse.org/en/stable/", None),
     "pyarrow": ("https://arrow.apache.org/docs/", None),
     "networkx": ("https://networkx.org/documentation/stable/", None),
     "click": ("https://click.palletsprojects.com/en/stable/", None),
