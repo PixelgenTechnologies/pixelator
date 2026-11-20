@@ -34,8 +34,8 @@ from pixelator.pna.config.panel.validation import (
     _INDEX_COLUMN,
     _INDEX_COLUMN_TYPE,
     _REQUIRED_COLUMNS,
-    _ROW_COLUMNS,
     _UNIQUE_COLUMNS,
+    ROW_COLUMNS,
     validate_antibody_panel,
 )
 
@@ -514,7 +514,7 @@ class PNAAntibodyPanel:
         and ``sample_hashing``) are left out, since a marker id can have several
         rows. The remaining columns are the same on every row of a marker.
         """
-        table = self._df.drop(columns=list(_ROW_COLUMNS), errors="ignore")
+        table = self._df.drop(columns=list(ROW_COLUMNS), errors="ignore")
         return table[~table.index.duplicated()]
 
     @cached_property

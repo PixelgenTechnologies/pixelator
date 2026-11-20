@@ -142,4 +142,5 @@ def test_write_pna_pxl_stores_a_multi_source_panel(real_panel, tmp_path):
     dataset = read(path)
     assert PNAAntibodyPanel.from_pxl_dataset(dataset) == panel
     adata = dataset.adata()
-    assert "sequence_1" in adata.var.columns
+    assert "control" in adata.var.columns
+    assert "sequence_1" not in adata.var.columns

@@ -141,7 +141,7 @@ class TestPNAPixelDataset:
         adata_data.obs["sample"] = "test_sample"
         adata_data.uns.pop("panel_metadata", None)
         adata_data.var = adata_data.var.join(
-            panel.df.reindex(adata_data.var_names), how="left"
+            panel.marker_table().reindex(adata_data.var_names), how="left"
         )
 
         adata = pxl_dataset.adata(add_clr_transform=False, add_log1p_transform=False)

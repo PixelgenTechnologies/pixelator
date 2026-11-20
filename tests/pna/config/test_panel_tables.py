@@ -11,7 +11,7 @@ import pytest
 from anndata import AnnData
 
 from pixelator.common.config import AntibodyPanelMetadata
-from pixelator.pna.config.panel import PNAAntibodyPanel
+from pixelator.pna.config.panel import ROW_COLUMNS, PNAAntibodyPanel
 from pixelator.pna.config.panel.tables import (
     has_panel_tables,
     panel_tables_present,
@@ -230,5 +230,35 @@ def test_stored_panel_columns_are_joined_back_onto_var(tmp_path: Path):
     adata = read(path).adata(add_clr_transform=False, add_log1p_transform=False)
 
     assert adata.var.loc["CD3", "uniprot_id"] == "P01730"
-    assert adata.var.loc["CD3", "sequence_1"] == "AAAA"
     assert "panel_metadata" not in adata.uns
+
+
+def test_var_has_no_columns_describing_a_single_panel_row(tmp_path: Path):
+    panel = _panel("base", "1.0.0", [_marker("CD3", "AAAA", sample_hashing="")])
+    path = tmp_path / "sample.pxl"
+    _write_pxl(path, panel, ["CD3"])
+
+    adata = read(path).adata(add_clr_transform=False, add_log1p_transform=False)
+
+    assert not set(ROW_COLUMNS) & set(adata.var.columns)
+    assert "control" in adata.var.columns
+
+
+def test_a_panel_with_repeated_marker_ids_is_read_as_adata(tmp_path: Path):
+    panel = _panel(
+        "base",
+        "1.0.0",
+        [
+            _marker("CD3", "AAAA", uniprot_id="P07766"),
+            _marker("CD3", "CCCC", uniprot_id="P07766"),
+            _marker("CD4", "GGGG", uniprot_id="P01730"),
+        ],
+    )
+    path = tmp_path / "sample.pxl"
+    _write_pxl(path, panel, ["CD3", "CD4"])
+
+    adata = read(path).adata(add_clr_transform=False, add_log1p_transform=False)
+
+    assert list(adata.var_names) == ["CD3", "CD4"]
+    assert adata.var["uniprot_id"].to_dict() == {"CD3": "P07766", "CD4": "P01730"}
+    assert not set(ROW_COLUMNS) & set(adata.var.columns)

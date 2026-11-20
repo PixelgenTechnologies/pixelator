@@ -35,7 +35,7 @@ _UNIQUE_COLUMNS = ["sequence_1", "sequence_2"]
 # sample_hashing is listed for hashing clones that will share one marker id
 # (for example B2M), where it will hold the hash index of each row. Today it is
 # still a yes/no flag.
-_ROW_COLUMNS = frozenset({*_UNIQUE_COLUMNS, "sample_hashing"})
+ROW_COLUMNS = frozenset({*_UNIQUE_COLUMNS, "sample_hashing"})
 
 # UniProt accession naming convention. The trailing alternative allows an empty id.
 _UNIPROT_ID_RE = re.compile(
@@ -136,7 +136,7 @@ def _validate_repeated_marker_rows(panel_df: pd.DataFrame) -> list[str]:
     the row itself.
     """
     shared = panel_df[panel_df.index.duplicated(keep=False)]
-    columns = [col for col in panel_df.columns if col not in _ROW_COLUMNS]
+    columns = [col for col in panel_df.columns if col not in ROW_COLUMNS]
     if shared.empty or not columns:
         return []
     n_values = shared[columns].groupby(level=0).nunique(dropna=False)
@@ -149,7 +149,7 @@ def _validate_repeated_marker_rows(panel_df: pd.DataFrame) -> list[str]:
         return []
     return [
         "Rows that share a marker_id must agree on every column except "
-        f"{sorted(_ROW_COLUMNS)}. Offending values (marker_id: columns): "
+        f"{sorted(ROW_COLUMNS)}. Offending values (marker_id: columns): "
         f"{disagreements}"
     ]
 
