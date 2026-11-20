@@ -221,6 +221,46 @@ def test_concatenate_rejects_duplicate_marker_and_sequence():
         PNAAntibodyPanel.concatenate([left, same_sequence])
 
 
+def test_concatenate_accepts_a_marker_id_that_repeats_within_a_source():
+    base = _panel("base", "1.0.0", [_marker("CD3", "AAAA"), _marker("CD3", "CCCC")])
+    addon = _panel("addon", "2.0.0", [_marker("CD19", "GGGG")])
+
+    combined = PNAAntibodyPanel.concatenate([base, addon])
+
+    assert combined.markers == ["CD3", "CD19"]
+    assert list(combined.marker_source_ids) == [0, 0, 1]
+    assert combined.source_as_panel(0) == base
+    assert combined.source_as_panel(1) == addon
+
+
+def test_concatenate_reports_a_repeated_marker_id_once():
+    left = _panel("base", "1.0.0", [_marker("CD3", "AAAA"), _marker("CD3", "CCCC")])
+    right = _panel("addon", "2.0.0", [_marker("CD3", "GGGG")])
+
+    with pytest.raises(ValueError) as error:
+        PNAAntibodyPanel.concatenate([left, right])
+
+    assert str(error.value).count("marker_id 'CD3'") == 1
+
+
+def test_replace_source_keeps_the_rows_of_a_repeated_marker_id():
+    base = _panel("base", "1.0.0", [_marker("CD3", "AAAA"), _marker("CD3", "CCCC")])
+    addon = _panel("addon", "2.0.0", [_marker("CD19", "GGGG")])
+    new_addon = _panel("addon", "2.0.1", [_marker("CD19", "GGGG")])
+
+    replaced = PNAAntibodyPanel.concatenate([base, addon]).replace_source(1, new_addon)
+
+    assert replaced == PNAAntibodyPanel.concatenate([base, new_addon])
+    assert list(replaced.marker_source_ids) == [0, 0, 1]
+
+
+def test_panel_needs_one_source_id_per_row():
+    panel = _panel("base", "1.0.0", [_marker("CD3", "AAAA"), _marker("CD3", "CCCC")])
+
+    with pytest.raises(ValueError, match="one value per row"):
+        PNAAntibodyPanel(panel.df, panel.sources, panel.marker_source_ids.iloc[:1])
+
+
 def test_concatenate_names_the_sources_that_overlap():
     base = _panel("base", "1.0.0", [_marker("CD3", "AAAA")])
     addon = _panel("addon", "2.1.0", [_marker("CD19", "CCCC")])

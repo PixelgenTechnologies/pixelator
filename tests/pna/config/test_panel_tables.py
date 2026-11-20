@@ -102,6 +102,22 @@ def test_hashing_clones_round_trip(tmp_path: Path):
     assert sorted(loaded.hashing_marker_ids) == ["B2M-1", "B2M-2"]
 
 
+def test_a_panel_with_repeated_marker_ids_round_trips(tmp_path: Path):
+    base = _panel(
+        "base",
+        "1.0.0",
+        [_marker("CD3", "AAAA"), _marker("CD3", "CCCC"), _marker("CD4", "GGGG")],
+    )
+    addon = _panel("addon", "2.0.0", [_marker("CD19", "TTTT")])
+    panel = PNAAntibodyPanel.concatenate([base, addon])
+
+    loaded = _store_and_load(tmp_path / "sample.pxl", panel)
+
+    assert loaded == panel
+    assert list(loaded.df["sequence_1"]) == ["AAAA", "CCCC", "GGGG", "TTTT"]
+    assert list(loaded.marker_source_ids) == [0, 0, 0, 1]
+
+
 def test_writing_a_panel_again_replaces_the_stored_one(tmp_path: Path):
     first = _panel("base", "1.0.0", [_marker("CD3", "AAAA")])
     second = _panel("base", "1.0.1", [_marker("CD3E", "AAAA")])

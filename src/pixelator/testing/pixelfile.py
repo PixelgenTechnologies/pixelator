@@ -20,8 +20,10 @@ def with_legacy_panel_columns(adata: AnnData, panel: PNAAntibodyPanel) -> AnnDat
     """Store ``panel`` on ``adata`` the way files without panel tables do.
 
     The panel columns go on ``var`` and the panel metadata in ``uns``. Only a
-    panel with a single source can be stored this way.
+    panel with a single source and one row per marker id can be stored this way.
     """
+    if panel.df.index.has_duplicates:
+        raise ValueError("The legacy format has one row per marker id.")
     adata.var = adata.var.join(panel.df, how="left")
     adata.uns["panel_metadata"] = panel.metadata.model_dump()
     adata.uns["panel_metadata"]["panel_columns"] = list(panel.df.columns)
