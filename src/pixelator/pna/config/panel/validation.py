@@ -29,7 +29,9 @@ _REQUIRED_COLUMNS = {
 # and these should have unique values
 _UNIQUE_COLUMNS = ["sequence_1", "sequence_2"]
 
-# columns that describe one row, so rows sharing a marker id may differ in them
+# columns that describe one row, so rows sharing a marker id may differ in them.
+# For example, two rows of CD3 can have different sequences and hash indexes,
+# but must have the same control flag and uniprot_id.
 _ROW_COLUMNS = frozenset({*_UNIQUE_COLUMNS, "sample_hashing"})
 
 # UniProt accession naming convention. The trailing alternative allows an empty id.
