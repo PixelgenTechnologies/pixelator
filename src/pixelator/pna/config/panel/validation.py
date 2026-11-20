@@ -30,8 +30,11 @@ _REQUIRED_COLUMNS = {
 _UNIQUE_COLUMNS = ["sequence_1", "sequence_2"]
 
 # columns that describe one row, so rows sharing a marker id may differ in them.
-# For example, two rows of CD3 can have different sequences and hash indexes,
-# but must have the same control flag and uniprot_id.
+# For example, two rows of CD3 can have different sequences, but must have the
+# same control flag and uniprot_id.
+# sample_hashing is listed for hashing clones that will share one marker id
+# (for example B2M), where it will hold the hash index of each row. Today it is
+# still a yes/no flag.
 _ROW_COLUMNS = frozenset({*_UNIQUE_COLUMNS, "sample_hashing"})
 
 # UniProt accession naming convention. The trailing alternative allows an empty id.
