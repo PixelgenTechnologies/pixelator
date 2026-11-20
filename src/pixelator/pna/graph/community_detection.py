@@ -468,6 +468,9 @@ def find_components(
 ) -> tuple[GraphStatistics, Path]:
     """Find components in the given edgelist.
 
+    The ``marker_sequence_1`` and ``marker_sequence_2`` columns of the input, when
+    present, are not carried into the output edgelist.
+
     Args:
         input_edgelist_path: Path to the input edgelist in Parquet format.
         working_dir: Directory to use for temporary files and output.
