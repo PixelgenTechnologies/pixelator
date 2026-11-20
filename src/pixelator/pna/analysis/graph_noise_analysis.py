@@ -293,7 +293,9 @@ class KcoreAnalysis(PerComponentTask):
         data.fillna(0, inplace=True)
         data.sort_index(axis="columns", inplace=True)
 
-        adata = PNAPixelDataset.from_files(pxl_file_target).adata()
+        adata = PNAPixelDataset.from_files(pxl_file_target).adata(
+            add_clr_transform=False, add_log1p_transform=False
+        )
         adata.obs.drop(
             columns=[col for col in adata.obs.columns if "k_core_" in col],
             inplace=True,
@@ -387,7 +389,9 @@ class SvdAnalysis(PerComponentTask):
             pxl_file_target: the PxlFile to add the data to.
         """
         logger.debug("Adding SVD analysis data to PNAPixelDataset")
-        adata = PNAPixelDataset.from_files(pxl_file_target.path).adata()
+        adata = PNAPixelDataset.from_files(pxl_file_target.path).adata(
+            add_clr_transform=False, add_log1p_transform=False
+        )
         adata.obs.drop(
             columns=[col for col in adata.obs.columns if "svd_var_expl_" in col],
             inplace=True,

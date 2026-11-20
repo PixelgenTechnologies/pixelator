@@ -23,6 +23,7 @@ from pixelator.pna.pixeldataset.utils import update_metrics_anndata
 from pixelator.pna.utils import normalize_input_to_list, normalize_input_to_set
 
 from .pixel_data_viewer import PixelDataViewer, PixelDataViewerSession
+from .pxl_file import DERIVED_OBSM_KEYS
 from .query_builder import QueryBuilder
 
 _MAX_REPORTED_MARKERS = 10
@@ -145,6 +146,10 @@ class AnnDataHelper:
             .filter(
                 (pl.col("name").str.starts_with("__adata__obsm"))
                 & (pl.col("database") == db_name)
+                # Files written by older versions may still store derived keys.
+                & ~pl.col("name").is_in(
+                    [f"__adata__obsm_{key}" for key in DERIVED_OBSM_KEYS]
+                )
             )
             .select(
                 pl.concat_str(
@@ -260,7 +265,7 @@ class AnnDataHelper:
         add_log1p_transform: bool,
         add_clr_transform: bool,
     ) -> AnnData:
-        if [add_clr_transform, add_log1p_transform].count(True) > 1:
+        if add_clr_transform or add_log1p_transform:
             with warnings.catch_warnings():
                 warnings.filterwarnings("ignore", category=ImplicitModificationWarning)
                 counts_df = adata.to_df()
