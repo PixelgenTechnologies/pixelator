@@ -3,6 +3,7 @@
 Copyright © 2025 Pixelgen Technologies AB.
 """
 
+import logging
 import random
 import tempfile
 from pathlib import Path
@@ -347,6 +348,111 @@ def test_find_components_prunes_small_clusters_leaving_one_large(random_graph_pa
     # With a pruning threshold of 150 nodes, only the 200-node cluster
     # should remain after component refinement.
     assert component_stats.component_count_post_recovery == 1
+
+
+def test_find_components_raises_when_refinement_shatters_every_component(
+    random_graph_path, caplog
+):
+    """Refinement that splits every component into undersized fragments raises cleanly.
+
+    The components pass the initial size filter, but refinement at a very high resolution
+    and with no merging of communities splits them all into pieces below the refinement
+    size threshold, so all of them are discarded. This must surface as a
+    ``ConnectedComponentException`` instead of a polars error from reading the
+    emptied-out hive-partitioned edgelist (PNA-3734).
+
+    Args:
+        random_graph_path: random graph path.
+        caplog: Caplog.
+    """
+    staged_refinement_options = StagedRefinementOptions(
+        initial_stage_options=RefinementOptions(
+            leiden_resolution=1.0,
+            min_component_size_to_prune=10,
+        ),
+        refinement_stage_options=RefinementOptions(
+            leiden_resolution=50.0,
+            max_edges_to_remove=None,
+            max_edges_to_remove_relative=None,
+            min_component_size_to_prune=90,
+        ),
+        max_component_refinement_depth=3,
+    )
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        working_dir = Path(temp_dir)
+        with (
+            caplog.at_level(logging.INFO),
+            pytest.raises(
+                ConnectedComponentException,
+                match="No connected components left after multiplet recovery refinement",
+            ) as exc_info,
+        ):
+            find_components(
+                input_edgelist_path=Path(random_graph_path),
+                working_dir=working_dir,
+                multiplet_recovery=True,
+                edge_cycle_verification=False,
+                min_read_count=1,
+                component_size_threshold=(10, 1_000_000),
+                n_threads=2,
+                refinement_options=staged_refinement_options,
+            )
+
+    stats = exc_info.value.statistics
+    assert stats is not None
+    assert stats.component_count_post_component_size_filtering == 0
+    assert stats.component_count_pre_component_size_filtering > 0
+    assert stats.component_size_min_filtering_threshold == 10
+    assert stats.component_size_max_filtering_threshold == 1_000_000
+    assert "Component size filter kept" in caplog.text
+    assert "Refinement level 1: split" in caplog.text
+    assert "were lost entirely" in caplog.text
+
+
+def test_find_components_logs_size_filter_and_refinement_summary(
+    random_graph_path, caplog
+):
+    """A successful run logs what the size filters and refinement kept and removed.
+
+    Args:
+        random_graph_path: random graph path.
+        caplog: Caplog.
+    """
+    staged_refinement_options = StagedRefinementOptions(
+        initial_stage_options=RefinementOptions(
+            leiden_resolution=1.0,
+            min_component_size_to_prune=150,
+        ),
+        refinement_stage_options=RefinementOptions(
+            leiden_resolution=0.01,
+        ),
+        max_component_refinement_depth=3,
+    )
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        working_dir = Path(temp_dir)
+        with caplog.at_level(logging.INFO):
+            find_components(
+                input_edgelist_path=Path(random_graph_path),
+                working_dir=working_dir,
+                multiplet_recovery=True,
+                edge_cycle_verification=False,
+                min_read_count=1,
+                component_size_threshold=(150, 1_000_000),
+                n_threads=2,
+                refinement_options=staged_refinement_options,
+            )
+
+    # The ten 100-node clusters fall below 150 and only the 200-node cluster is kept.
+    assert "Component size filter kept 1 components. Removed 10 below 150 UMIs" in (
+        caplog.text
+    )
+    assert "Refinement removed" in caplog.text
+    assert (
+        "Final component size filter kept 1 of 11 components. Removed 10 below 150"
+        in (caplog.text)
+    )
 
 
 def test_find_components_empty_parquet_file():

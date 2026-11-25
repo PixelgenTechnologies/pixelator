@@ -10,6 +10,7 @@ from concurrent.futures import as_completed
 from dataclasses import dataclass, field
 from functools import partial
 from pathlib import Path
+from typing import NoReturn
 
 import networkx as nx
 import numpy as np
@@ -141,6 +142,57 @@ def calculate_post_recovery_component_statistics(
     )[0, 0]
 
     return component_stats
+
+
+def list_hive_partitions(hive_partitioned_edgelist_path: Path) -> list[Path]:
+    """List the component partitions of a hive-partitioned edgelist.
+
+    Args:
+        hive_partitioned_edgelist_path: Path to the edgelist partitioned by ``component``.
+
+    Returns:
+        The ``component=<id>`` partition directories, or an empty list if there are none or
+        the path does not exist.
+    """
+    if not hive_partitioned_edgelist_path.exists():
+        return []
+    return list(hive_partitioned_edgelist_path.glob("component=*"))
+
+
+def _raise_no_components_left(
+    msg: str,
+    component_stats: GraphStatistics,
+    discard_sizes: pl.DataFrame,
+    min_component_size: int,
+    max_component_size: int,
+) -> NoReturn:
+    """Record the size filtering statistics and raise a ``ConnectedComponentException``.
+
+    Args:
+        msg: Message for the exception.
+        component_stats: Graph statistics to update and attach to the exception.
+        discard_sizes: Sizes (``n_umi``) of every component discarded so far.
+        min_component_size: Lower component size bound in use.
+        max_component_size: Upper component size bound in use.
+
+    Raises:
+        ConnectedComponentException: Always.
+    """
+    if discard_sizes.height > 0:
+        unique, counts = np.unique(
+            discard_sizes["n_umi"].cast(pl.Int32).to_numpy(),
+            return_counts=True,
+        )
+        component_stats.pre_filtering_component_sizes = {
+            int(size): int(count) for size, count in zip(unique, counts)
+        }
+        component_stats.component_count_pre_component_size_filtering = int(
+            discard_sizes.height
+        )
+    component_stats.component_count_post_component_size_filtering = 0
+    component_stats.component_size_min_filtering_threshold = min_component_size
+    component_stats.component_size_max_filtering_threshold = int(max_component_size)
+    raise ConnectedComponentException(msg, statistics=component_stats)
 
 
 def merge_communities_with_many_crossing_edges(
@@ -381,8 +433,11 @@ def run_leiden_refinement(
     )
     mp_context = multiprocessing.get_context("spawn")
     n_total_crossing_edges = 0
+    n_total_lost_components = 0
+    n_total_fragments = 0
+    n_total_fragment_umis = 0
     all_discard_sizes = []
-    # Discard 1 to take into account first Leiden pass
+    # Subtract 1 to take into account first Leiden pass
     for recursion_level in range(refinement_options.max_component_refinement_depth - 1):
         if not to_be_refined:
             logger.debug(
@@ -392,6 +447,11 @@ def run_leiden_refinement(
 
         all_new_component_sizes = []
         discard_sizes = []
+        n_split_components = 0
+        n_lost_components = 0
+        n_kept_parts = 0
+        n_fragments = 0
+        n_fragment_umis = 0
         with get_process_pool_executor(
             max_workers=max_workers,
             mp_context=mp_context,
@@ -408,6 +468,14 @@ def run_leiden_refinement(
                     all_new_component_sizes.append(new_comp_sizes)
                     discard_sizes.append(new_discard_sizes)
                     n_total_crossing_edges += n_crossing_edges
+                    # Both series are empty when the component was not split.
+                    if len(new_comp_sizes) + len(new_discard_sizes) > 0:
+                        n_split_components += 1
+                        if len(new_comp_sizes) == 0:
+                            n_lost_components += 1
+                    n_kept_parts += len(new_comp_sizes)
+                    n_fragments += len(new_discard_sizes)
+                    n_fragment_umis += int(new_discard_sizes.sum())
                 except Exception as e:
                     logger.error(
                         "Worker failed during component refinement: %s",
@@ -415,6 +483,25 @@ def run_leiden_refinement(
                         exc_info=True,
                     )
                     raise e
+
+        logger.info(
+            "Refinement level %d: split %d of %d components into %d parts of at least "
+            "%d UMIs (kept) and %d fragments below it (discarded, %d UMIs in total). "
+            "%d components were lost entirely because none of their parts reached "
+            "%d UMIs.",
+            recursion_level + 1,
+            n_split_components,
+            len(to_be_refined),
+            n_kept_parts,
+            min_size_to_prune,
+            n_fragments,
+            n_fragment_umis,
+            n_lost_components,
+            min_size_to_prune,
+        )
+        n_total_lost_components += n_lost_components
+        n_total_fragments += n_fragments
+        n_total_fragment_umis += n_fragment_umis
 
         if len(all_new_component_sizes) > 0:
             results = pd.concat(all_new_component_sizes)
@@ -437,6 +524,15 @@ def run_leiden_refinement(
             )
         all_discard_sizes.append(iteration_discard_sizes_df)
         component_stats.max_recursion_depth = recursion_level + 1
+
+    logger.info(
+        "Refinement removed %d crossing edges and discarded %d fragments (%d UMIs in "
+        "total); %d components were lost entirely.",
+        n_total_crossing_edges,
+        n_total_fragments,
+        n_total_fragment_umis,
+        n_total_lost_components,
+    )
 
     if all_discard_sizes:
         discard_sizes_df = pl.concat(all_discard_sizes)
@@ -586,36 +682,44 @@ def find_components(
             working_dir=working_dir,
         )
     )
+    min_component_size = (
+        refinement_options.initial_stage_options.min_component_size_to_prune
+    )
     discarded_large_components = discard_sizes.filter(
         pl.col("n_umi") > upper_component_size_bound
     )
+    discarded_small_components = discard_sizes.filter(
+        pl.col("n_umi") < min_component_size
+    )
+    n_size_filtered_components = len(
+        list_hive_partitions(hive_partitioned_edgelist_path)
+    )
+    logger.info(
+        "Component size filter kept %d components. Removed %d below %d UMIs "
+        "(%d UMIs in total) and %d above %d UMIs (%d UMIs in total).",
+        n_size_filtered_components,
+        discarded_small_components.height,
+        min_component_size,
+        discarded_small_components["n_umi"].sum(),
+        discarded_large_components.height,
+        upper_component_size_bound,
+        discarded_large_components["n_umi"].sum(),
+    )
 
-    if not any(hive_partitioned_edgelist_path.iterdir()):
+    if n_size_filtered_components == 0:
         msg = (
             "No connected components found in the graph after filtering by component size. "
             "Likely all components were filtered away for being too small or too large. "
             "This indicates some serious issue with the data, or that the configured size "
             "thresholds are too strict. Will not continue with the rest of the computations."
         )
-        if discard_sizes.height > 0:
-            unique, counts = np.unique(
-                discard_sizes["n_umi"].cast(pl.Int32).to_numpy(),
-                return_counts=True,
-            )
-            component_stats.pre_filtering_component_sizes = {
-                int(size): int(count) for size, count in zip(unique, counts)
-            }
-            component_stats.component_count_pre_component_size_filtering = int(
-                discard_sizes.height
-            )
-        component_stats.component_count_post_component_size_filtering = 0
-        component_stats.component_size_min_filtering_threshold = (
-            refinement_options.initial_stage_options.min_component_size_to_prune
+        _raise_no_components_left(
+            msg,
+            component_stats=component_stats,
+            discard_sizes=discard_sizes,
+            min_component_size=min_component_size,
+            max_component_size=upper_component_size_bound,
         )
-        component_stats.component_size_max_filtering_threshold = int(
-            upper_component_size_bound
-        )
-        raise ConnectedComponentException(msg, statistics=component_stats)
 
     latest_working_edgelist_path = hive_partitioned_edgelist_path
 
@@ -637,6 +741,25 @@ def find_components(
             logger.info(
                 f"Refinement stages completed in {time.time() - time_start:.2f} seconds."
             )
+
+            if not list_hive_partitions(latest_working_edgelist_path):
+                fragment_size = refinement_options.refinement_stage_options.min_component_size_to_prune
+                msg = (
+                    f"No connected components left after multiplet recovery refinement. All "
+                    f"{n_size_filtered_components} components that passed the size filter were "
+                    f"split into fragments smaller than {fragment_size} UMIs, which were "
+                    "discarded. This usually means the graph is too sparsely connected for "
+                    "refinement. Re-running with --max-refinement-recursion-depth 1 skips "
+                    "refinement; a lower --refinement-stage-leiden-resolution makes it split "
+                    "less. Will not continue with the rest of the computations."
+                )
+                _raise_no_components_left(
+                    msg,
+                    component_stats=component_stats,
+                    discard_sizes=discard_sizes,
+                    min_component_size=min_component_size,
+                    max_component_size=upper_component_size_bound,
+                )
 
         component_stats = calculate_post_recovery_component_statistics(
             edgelist_with_components_path=latest_working_edgelist_path,
