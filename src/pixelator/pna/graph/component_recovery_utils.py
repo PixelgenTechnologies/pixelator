@@ -29,6 +29,9 @@ from pixelator.pna.graph.report import GraphStatistics
 
 logger = logging.getLogger(__name__)
 
+# Aggregate output columns that the graph step does not carry into the PXL file.
+_DROPPED_INPUT_COLUMNS = ("marker_sequence_1", "marker_sequence_2")
+
 
 def has_uei_count(con, relation: str) -> bool:
     """Return True if ``relation`` has a ``uei_count`` column."""
@@ -353,6 +356,9 @@ def remove_umis(
 ) -> Path:
     """Remove specified UMIs from an edgelist and write the filtered edgelist under ``working_dir``.
 
+    The ``marker_sequence_1`` and ``marker_sequence_2`` columns, when present, are
+    dropped so that they do not end up in the PXL file.
+
     Args:
         input_edgelist_path: Input Parquet edgelist.
         umis_to_remove: UMIs whose edges should be dropped.
@@ -362,10 +368,14 @@ def remove_umis(
         Path to the written Parquet file (``no_clash_edgelist.parquet`` in ``working_dir``).
     """
     target_path = working_dir / "no_clash_edgelist.parquet"
+    excluded = ", ".join(f"'{column}'" for column in _DROPPED_INPUT_COLUMNS)
     with connect_duckdb() as con:
-        con.execute(
-            f"CREATE VIEW edgelist AS SELECT * FROM parquet_scan('{str(input_edgelist_path)}')"
-        )
+        # Unlike EXCLUDE, a COLUMNS lambda does not fail on missing columns.
+        con.execute(f"""
+            CREATE VIEW edgelist AS
+            SELECT COLUMNS(c -> c NOT IN ({excluded}))
+            FROM parquet_scan('{str(input_edgelist_path)}')
+        """)
         umis_to_remove_df = umis_to_remove.to_frame()
         con.execute("""
             CREATE VIEW filtered_edgelist AS
@@ -598,6 +608,7 @@ def filter_connected_components_by_size(
     component_stats.component_count_pre_component_size_filtering = (
         component_sizes.height
     )
+    max_size: int | None = None
     if component_size_threshold is True:
         logger.debug("Filtering components by dynamic size thresholds")
         try:
@@ -635,7 +646,27 @@ def filter_connected_components_by_size(
             component_sizes, min_size, max_size
         )
 
-    logger.info(f"{len(passing_components)} left after filtering.")
+    n_below_min = (
+        component_sizes.filter(pl.col("n_umi") < min_size).height
+        if min_size is not None
+        else 0
+    )
+    n_above_max = (
+        component_sizes.filter(pl.col("n_umi") > max_size).height
+        if max_size is not None
+        else 0
+    )
+    logger.info(
+        "Final component size filter kept %d of %d components. Removed %d below %s UMIs "
+        "and %d above %s UMIs (these counts include components discarded earlier in the "
+        "pipeline).",
+        len(passing_components),
+        component_sizes.height,
+        n_below_min,
+        min_size,
+        n_above_max,
+        max_size,
+    )
     if len(passing_components) == 0:
         msg = (
             "No connected components found in the graph. Likely they were all filtered away for being to small. "
