@@ -140,21 +140,18 @@ def test_graph_collapse_cli_memory_limit_reaches_duckdb(graph_pxl_file, monkeypa
 
     import pixelator.pna.graph_collapse.collapse as collapse
 
-    original_execute = collapse.duckdb.DuckDBPyConnection.execute
+    original_close = collapse.PixelFileWriter.close
 
-    def recording_execute(self, query, *args, **kwargs):
-        result = original_execute(self, query, *args, **kwargs)
-        if "memory_limit" in query:
-            seen.append(
-                original_execute(
-                    self, "SELECT current_setting('memory_limit')"
-                ).fetchone()[0]
-            )
-        return result
+    def recording_close(self):
+        # Read the setting off the connection that wrote the output, before it closes.
+        seen.append(
+            self.get_connection()
+            .execute("SELECT current_setting('memory_limit')")
+            .fetchone()[0]
+        )
+        original_close(self)
 
-    monkeypatch.setattr(
-        collapse.duckdb.DuckDBPyConnection, "execute", recording_execute
-    )
+    monkeypatch.setattr(collapse.PixelFileWriter, "close", recording_close)
 
     runner = CliRunner()
     with tempfile.TemporaryDirectory() as d:

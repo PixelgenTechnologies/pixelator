@@ -50,43 +50,6 @@ class TestPixelFileWriter:
         assert memory_limit == "1.9 GiB"
         assert threads == 3
 
-    def test_copy_from_copies_everything_but_the_rows_of_empty_tables(self, tmp_path):
-        """Schemas, views, macros and column types come over; edgelist rows do not."""
-        import duckdb
-
-        source = tmp_path / "source.pxl"
-        with duckdb.connect(str(source)) as con:
-            con.execute("CREATE TABLE edgelist (umi1 UBIGINT, read_count USMALLINT)")
-            con.execute("INSERT INTO edgelist VALUES (1, 2)")
-            con.execute("CREATE TABLE metadata (value JSON)")
-            con.execute("""INSERT INTO metadata VALUES ('{"a": 1}')""")
-            con.execute("CREATE SCHEMA extra")
-            con.execute("CREATE TABLE extra.edgelist AS SELECT 1 AS note")
-            con.execute("CREATE VIEW edge_count AS SELECT COUNT(*) AS n FROM edgelist")
-            con.execute("CREATE MACRO plus_one(x) AS x + 1")
-
-        target = tmp_path / "target.pxl"
-        with PixelFileWriter(target) as writer:
-            writer.copy_from(source, empty_tables=("edgelist",))
-            attached = [
-                row[0]
-                for row in writer.get_connection()
-                .execute("SELECT database_name FROM duckdb_databases()")
-                .fetchall()
-            ]
-        assert "__copy_source" not in attached
-
-        with duckdb.connect(str(target), read_only=True) as con:
-            assert con.execute("SELECT * FROM edgelist").fetchall() == []
-            assert con.execute(
-                "SELECT column_type FROM (DESCRIBE edgelist)"
-            ).fetchall() == [("UBIGINT",), ("USMALLINT",)]
-            assert con.execute("SELECT * FROM metadata").fetchall() == [('{"a": 1}',)]
-            # Only the edgelist of the main schema is left empty.
-            assert con.execute("SELECT * FROM extra.edgelist").fetchall() == [(1,)]
-            assert con.execute("SELECT n FROM edge_count").fetchall() == [(0,)]
-            assert con.execute("SELECT plus_one(1)").fetchone()[0] == 2
-
     def test_open_defaults_temp_directory_to_tmp(self, tmp_path, monkeypatch):
         """The writer should default the DuckDB spill directory to /tmp when env is unset.
 

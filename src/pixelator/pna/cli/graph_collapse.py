@@ -186,7 +186,6 @@ def graph_collapse(
     input_adata = input_dataset.adata()
     reads_input = int(input_adata.obs["reads_in_component"].sum())
     umis_input = int(input_adata.obs["n_umi"].sum())
-    markers = list(input_adata.var_names)
     del input_adata
 
     result = run_graph_collapse(
@@ -201,7 +200,6 @@ def graph_collapse(
         report_collapsed_sequences=report_collapsed_sequences,
         memory_limit=memory,
         temp_directory=ctx.obj.get("DUCKDB_TEMP_DIR"),
-        markers=markers,
     )
     collapsed_obs = read(output_path).adata().obs
     reads_output = int(collapsed_obs["reads_in_component"].sum())
