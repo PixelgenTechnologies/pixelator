@@ -5,6 +5,7 @@ Copyright © 2025 Pixelgen Technologies AB.
 
 import logging
 import random
+import shutil
 import tempfile
 from pathlib import Path
 
@@ -15,8 +16,10 @@ from pixelator.pna.graph.community_detection import (
     RefinementOptions,
     StagedRefinementOptions,
     find_components,
+    list_hive_partitions,
 )
 from pixelator.pna.graph.component_recovery_utils import ConnectedComponentException
+from pixelator.pna.graph.report import GraphStatistics
 
 
 @pytest.fixture
@@ -350,31 +353,61 @@ def test_find_components_prunes_small_clusters_leaving_one_large(random_graph_pa
     assert component_stats.component_count_post_recovery == 1
 
 
-def test_find_components_raises_when_refinement_shatters_every_component(
-    random_graph_path, caplog
-):
-    """Refinement that splits every component into undersized fragments raises cleanly.
+def _discard_every_component_in_refinement(
+    component_edgelists_path: Path,
+    component_stats: GraphStatistics,
+    **kwargs,
+) -> tuple[GraphStatistics, pl.DataFrame]:
+    """Stand-in for ``run_leiden_refinement`` that discards every component.
 
-    The components pass the initial size filter, but refinement at a very high resolution
-    and with no merging of communities splits them all into pieces below the refinement
-    size threshold, so all of them are discarded. This must surface as a
-    ``ConnectedComponentException`` instead of a polars error from reading the
-    emptied-out hive-partitioned edgelist (PNA-3734).
+    It mimics refinement splitting each component into fragments below the size threshold:
+    every partition is removed from the hive-partitioned edgelist and reported as a
+    discarded fragment.
+
+    Args:
+        component_edgelists_path: Path to the hive-partitioned edgelist.
+        component_stats: Graph statistics, returned unchanged.
+        **kwargs: The other ``run_leiden_refinement`` arguments, ignored.
+
+    Returns:
+        The statistics and the sizes of the discarded fragments.
+    """
+    fragment_ids = []
+    for partition in list_hive_partitions(component_edgelists_path):
+        fragment_ids.append(partition.name.removeprefix("component=") + "_0")
+        shutil.rmtree(partition)
+    discard_sizes = pl.DataFrame(
+        {
+            "component": pl.Series(fragment_ids, dtype=pl.Utf8),
+            "n_umi": pl.Series([5] * len(fragment_ids), dtype=pl.UInt32),
+        }
+    )
+    return component_stats, discard_sizes
+
+
+def test_find_components_raises_when_refinement_shatters_every_component(
+    random_graph_path, caplog, monkeypatch
+):
+    """Refinement that discards every component raises cleanly.
+
+    The components pass the initial size filter, but refinement (mocked here) splits them
+    all into fragments below the size threshold, so all of them are discarded. This must
+    surface as a ``ConnectedComponentException`` instead of a polars error from reading
+    the emptied-out hive-partitioned edgelist (PNA-3734).
 
     Args:
         random_graph_path: random graph path.
         caplog: Caplog.
+        monkeypatch: Monkeypatch.
     """
+    monkeypatch.setattr(
+        "pixelator.pna.graph.community_detection.run_leiden_refinement",
+        _discard_every_component_in_refinement,
+    )
     staged_refinement_options = StagedRefinementOptions(
         initial_stage_options=RefinementOptions(
             leiden_resolution=1.0,
             min_component_size_to_prune=10,
-        ),
-        refinement_stage_options=RefinementOptions(
-            leiden_resolution=50.0,
-            max_edges_to_remove=None,
-            max_edges_to_remove_relative=None,
-            min_component_size_to_prune=90,
         ),
         max_component_refinement_depth=3,
     )
@@ -401,13 +434,14 @@ def test_find_components_raises_when_refinement_shatters_every_component(
 
     stats = exc_info.value.statistics
     assert stats is not None
+    # All 11 clusters pass the initial filter and come back as one fragment each.
+    assert stats.component_count_pre_component_size_filtering == 11
+    assert stats.pre_filtering_component_sizes == {5: 11}
     assert stats.component_count_post_component_size_filtering == 0
-    assert stats.component_count_pre_component_size_filtering > 0
     assert stats.component_size_min_filtering_threshold == 10
     assert stats.component_size_max_filtering_threshold == 1_000_000
-    assert "Component size filter kept" in caplog.text
-    assert "Refinement level 1: split" in caplog.text
-    assert "were lost entirely" in caplog.text
+    assert "Component size filter kept 11 components" in caplog.text
+    assert "All 11 components that passed the size filter" in str(exc_info.value)
 
 
 def test_find_components_logs_size_filter_and_refinement_summary(
