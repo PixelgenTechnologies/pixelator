@@ -34,8 +34,8 @@ def _ordered_pair_moments(side_1: str, side_2: str) -> tuple[str, str]:
         E[N_XY] = E p q
         Var[N_XY] = E p q + E (E - 1) a b - (E p q)^2
 
-    Note that this null treats every edge as an independent draw, i.e. it does
-    not account for all edges of a node carrying the same marker.
+    Note that this null treats every edge as if marker_1 and marker_2
+    are independent draws from their respective distributions.
     """
     p = f"({side_1}.e1 / cs.n_edges)"
     q = f"({side_2}.e2 / cs.n_edges)"
