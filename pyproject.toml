@@ -50,7 +50,7 @@ dependencies = [
     "polars>=1.0.0,<2.0.0",
     "graspologic-native>=1.2.4,<2",
     "duckdb>=1.4.2,<2",
-    "pixelgen-pixelator-core>=2.0.0,<3",
+    "pixelgen-pixelator-core>=3.0.0,<4",
     "requests>=2.32.5",
 ]
 
@@ -84,11 +84,6 @@ docs = [
     "sphinx-design>=0.6.1",
 ]
 
-
-# TODO: Remove once pixelator-core is released with the batched graph-collapse
-# binding (PixelgenTechnologies/pixelator-core#53), and require that version above.
-[tool.uv.sources]
-pixelgen-pixelator-core = { git = "https://github.com/PixelgenTechnologies/pixelator-core", branch = "feature/pna-3683_batch_graph_collapse", subdirectory = "packages/python_bindings" }
 
 [project.scripts]
 pixelator = "pixelator.cli:main_cli"
