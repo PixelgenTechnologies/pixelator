@@ -608,6 +608,7 @@ def filter_connected_components_by_size(
     component_stats.component_count_pre_component_size_filtering = (
         component_sizes.height
     )
+    max_size: int | None = None
     if component_size_threshold is True:
         logger.debug("Filtering components by dynamic size thresholds")
         try:
@@ -645,7 +646,27 @@ def filter_connected_components_by_size(
             component_sizes, min_size, max_size
         )
 
-    logger.info(f"{len(passing_components)} left after filtering.")
+    n_below_min = (
+        component_sizes.filter(pl.col("n_umi") < min_size).height
+        if min_size is not None
+        else 0
+    )
+    n_above_max = (
+        component_sizes.filter(pl.col("n_umi") > max_size).height
+        if max_size is not None
+        else 0
+    )
+    logger.info(
+        "Final component size filter kept %d of %d components. Removed %d below %s UMIs "
+        "and %d above %s UMIs (these counts include components discarded earlier in the "
+        "pipeline).",
+        len(passing_components),
+        component_sizes.height,
+        n_below_min,
+        min_size,
+        n_above_max,
+        max_size,
+    )
     if len(passing_components) == 0:
         msg = (
             "No connected components found in the graph. Likely they were all filtered away for being to small. "
