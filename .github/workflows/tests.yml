@@ -36,6 +36,7 @@ jobs:
             python:
               paths:
                 - 'pyproject.toml'
+                - 'uv.lock'
                 - 'src/**'
                 - 'tests/**'
               paths_ignore:
@@ -50,9 +51,9 @@ jobs:
       fail-fast: false
       matrix:
         py:
+          - "3.14"
           - "3.13"
           - "3.12"
-          - "3.11"
 
     steps:
       - uses: actions/checkout@v4

@@ -10,7 +10,7 @@ import click
 import yappi
 
 from pixelator import __version__
-from pixelator.cli.common import AliasedOrderedGroup, logger
+from pixelator.cli.common import AliasedOrderedGroup, OrderedGroup, logger
 from pixelator.cli.logging import LoggingSetup
 from pixelator.cli.plugin import add_cli_plugins
 from pixelator.common.duckdb_utils import (
@@ -53,7 +53,12 @@ from pixelator.common.utils import click_echo, get_available_cpu_count
 )
 @click.pass_context
 def main_cli(ctx, verbose: bool, profile: bool, log_file: str, cores: int):
-    """Run the main CLI entrypoint for pixelator."""
+    """Run the main CLI entrypoint for pixelator.
+
+    Exit codes: 0 on success, 1 on errors that re-running will not fix (e.g.
+    invalid input), and 137 when a command runs out of memory or spill space,
+    or a worker process is killed (re-run with more resources).
+    """
     # early out if run in help mode
     if any(x in sys.argv for x in ["--help", "--version"]):
         return 0
@@ -103,11 +108,7 @@ def main_cli(ctx, verbose: bool, profile: bool, log_file: str, cores: int):
 # at the top, because otherwise things like importing
 # the configs will not work as expected.
 from pixelator.pna.cli.aggregate import aggregate
-from pixelator.pna.cli.amplicon import amplicon
 from pixelator.pna.cli.analysis import analysis
-from pixelator.pna.cli.collapse import collapse
-from pixelator.pna.cli.combine_collapse import combine_collapse
-from pixelator.pna.cli.demux import demux
 from pixelator.pna.cli.denoise import denoise
 from pixelator.pna.cli.edgelist import edgelist
 from pixelator.pna.cli.graph import graph
@@ -121,7 +122,7 @@ from pixelator.pna.cli.misc import (
 from pixelator.pna.cli.sample_calling import sample_calling_cli
 
 
-@click.group()
+@click.group(cls=OrderedGroup)
 @click.option(
     "--list-designs",
     is_flag=True,
@@ -159,19 +160,16 @@ def single_cell_pna():
 
 main_cli.add_command(single_cell_pna)
 
-# Add all commands to the group
-single_cell_pna.add_command(amplicon)
-single_cell_pna.add_command(demux)
-single_cell_pna.add_command(collapse)
+# Add all commands to the group, in pipeline order (this is the order shown in `--help`).
+# Main workflow: edgelist -> aggregate -> graph -> graph-collapse
+single_cell_pna.add_command(edgelist)
+single_cell_pna.add_command(aggregate)
 single_cell_pna.add_command(graph)
+single_cell_pna.add_command(graph_collapse)
 single_cell_pna.add_command(sample_calling_cli, name="sample-calling")
 single_cell_pna.add_command(denoise)
 single_cell_pna.add_command(analysis)
 single_cell_pna.add_command(layout)
-single_cell_pna.add_command(combine_collapse, name="combine-collapse")
-single_cell_pna.add_command(edgelist)
-single_cell_pna.add_command(aggregate)
-single_cell_pna.add_command(graph_collapse)
 
 # Add cli plugins as commands on top level
 add_cli_plugins(main_cli)

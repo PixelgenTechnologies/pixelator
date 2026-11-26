@@ -6,13 +6,21 @@ Copyright © 2022 Pixelgen Technologies AB.
 import collections
 import functools
 import logging.handlers
+from concurrent.futures.process import BrokenProcessPool
 from pathlib import Path
 from typing import Dict, Mapping, Optional
 
 import click
+import duckdb
 
 BASE_DIR = str(Path(__file__).parent)
 logger = logging.getLogger("pixelator.cli")
+
+# Exit code for failures caused by insufficient resources (memory or DuckDB
+# spill space). Same code as a kernel OOM kill, so workflow engines that retry
+# on it (e.g. the nf-core default) will re-run the command with more resources.
+# All other failures, including input errors, keep exit code 1.
+EXIT_CODE_RESOURCE_EXHAUSTED = 137
 
 
 # code snippet obtained from
@@ -48,7 +56,34 @@ class AliasedOrderedGroup(OrderedGroup):
     """Custom click.Group that supports aliases.
 
     Currently only supports aliases for subgroups.
+
+    Out-of-memory failures (including worker processes killed by the OS) in any
+    subcommand exit with ``EXIT_CODE_RESOURCE_EXHAUSTED`` instead of 1.
     """
+
+    def invoke(self, ctx: click.Context):
+        """Invoke the command, mapping out-of-memory errors to a dedicated exit code."""
+        try:
+            return super().invoke(ctx)
+        except (
+            duckdb.OutOfMemoryException,
+            MemoryError,
+            # A worker killed by the OS (typically the kernel OOM killer) leaves
+            # no trace of its cause. A crash for another reason is mapped too,
+            # which is harmless: the retry will simply fail again.
+            BrokenProcessPool,
+        ) as error:
+            logger.debug("Out of memory error", exc_info=True)
+            logger.error(
+                "Out of memory (or worker process killed): %s\n"
+                "Re-run with more memory (--memory), or set "
+                "PIXELATOR_DUCKDB_TEMP_DIR or PIXELATOR_DUCKDB_MAX_TEMP_DIR_SIZE "
+                "to give DuckDB more spill space.",
+                error,
+            )
+        # Exit outside the except block, so that the original exception is no
+        # longer active and is not logged again as an unhandled exception.
+        ctx.exit(EXIT_CODE_RESOURCE_EXHAUSTED)
 
     def group(self, *args, **kwargs):
         """Attach a click group that supports aliases.

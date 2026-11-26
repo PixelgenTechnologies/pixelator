@@ -34,15 +34,11 @@ def test_command_line_interface():
 
     # Single cell PNA commands
     for command in [
-        "amplicon",
-        "demux",
-        "collapse",
         "graph",
         "sample-calling",
         "denoise",
         "analysis",
         "layout",
-        "combine-collapse",
     ]:
         result = runner.invoke(single_cell_pna, [command, "--help"])
         assert result.exit_code == 0, command

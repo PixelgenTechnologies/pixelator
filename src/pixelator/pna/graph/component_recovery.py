@@ -52,14 +52,14 @@ def build_pxl_file_with_components(
 ) -> tuple[PNAPixelDataset, GraphStatistics]:
     """Build a new PXL file with components recovered from edgelist.
 
-    Starting from an edgelist parquet file, (collapse step output) this function recovers components
+    Starting from an edgelist parquet file (aggregate step output), this function recovers components
     using community detection with staged refinement, and writes a new PXL file containing the
     edgelist with resolved components. Components are resolved based on the provided community
     detection options.
     It also computes and returns statistics about the graph.
 
     Args:
-        parquet_file: Path to the input parquet file containing the edgelist. (collapse step output)
+        parquet_file: Path to the input parquet file containing the edgelist (aggregate step output).
         panel: Name of the panel used in the experiment.
         sample_name: Name of the sample.
         path_output_pxl_file: Path to the output PXL file.

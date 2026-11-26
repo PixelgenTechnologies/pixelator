@@ -52,3 +52,14 @@ def test_benchmark_load_adata(benchmark, pxl_file):
     dataset = PNAPixelDataset.from_pxl_files(pxl_file)
     result = benchmark(lambda: dataset.adata())
     assert result.n_obs > 0
+
+
+def test_benchmark_load_adata_with_transforms_uncached(benchmark, pxl_file):
+    """Benchmark a first adata read, which computes clr and log1p from X.
+
+    Args:
+        benchmark: benchmark.
+        pxl_file: pxl file.
+    """
+    result = benchmark(lambda: PNAPixelDataset.from_pxl_files(pxl_file).adata())
+    assert {"clr", "log1p"} <= set(result.obsm)

@@ -44,6 +44,7 @@ class TestPixelFileWriter:
             monkeypatch: pytest monkeypatch fixture.
         """
         monkeypatch.delenv("PIXELATOR_DUCKDB_TEMP_DIR", raising=False)
+        monkeypatch.delenv("TMPDIR", raising=False)
         target = tmp_path / "file.pxl"
         with PixelFileWriter(target) as writer:
             setting = (
@@ -118,6 +119,30 @@ class TestPixelFileWriter:
         target = tmp_path / "file.pxl"
         with PixelFileWriter(target) as writer:
             writer.write_adata(adata_data)
+
+    def test_write_adata_omits_derived_obsm(self, tmp_path, adata_data):
+        """The clr and log1p transforms are not stored, other obsm entries are.
+
+        Args:
+            tmp_path: tmp path.
+            adata_data: adata data.
+        """
+        adata_data = adata_data.copy()
+        counts = adata_data.to_df()
+        for key in ("clr", "log1p", "custom"):
+            adata_data.obsm[key] = counts.astype(float)
+        target = tmp_path / "file.pxl"
+        with PixelFileWriter(target) as writer:
+            writer.write_adata(adata_data)
+            tables = set(
+                writer.get_connection()
+                .execute("SELECT table_name FROM duckdb_tables()")
+                .pl()["table_name"]
+            )
+
+        assert "__adata__obsm_custom" in tables
+        assert "__adata__obsm_clr" not in tables
+        assert "__adata__obsm_log1p" not in tables
 
     def test_write_adata_multiple_samples_raises(self, tmp_path, adata_data):
         """Verify write adata raises when obs contains multiple samples.

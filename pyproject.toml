@@ -5,7 +5,7 @@ description = "A command-line tool and library to process and analyze data gener
 authors = [
     { name = "Pixelgen Technologies AB", email = "developers@pixelgen.com" },
 ]
-requires-python = ">=3.11,<3.14"
+requires-python = ">=3.12,<3.15"
 readme = "README.md"
 license = "MIT"
 maintainers = [
@@ -27,20 +27,16 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Bio-Informatics",
     "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 
 dependencies = [
     "click<8.3", # Click 8.3 breaks `--output` in `test_cli_invocation_info`
-    "cutadapt>=4.2",
-    "xopen[zstd]", # Required by cutadapt
-    "pyfastx",
     "yappi",
     "pandas>=2.0.0,<3.0.0",
     "numpy>=2.0.0,<3.0.0",
-    "annoy<=1.17.0",
     "xxhash",
     "anndata>=0.8.0",
     "numba>=0.56.4",
@@ -52,14 +48,9 @@ dependencies = [
     "ruamel-yaml>=0.17.21,<0.18",
     "pydantic>=2.12.4,<3.0",
     "polars>=1.0.0,<2.0.0",
-    "importlib-resources>=5.12.0,<6",
-    "fsspec",
-    "plotly",
     "graspologic-native>=1.2.4,<2",
     "duckdb>=1.4.2,<2",
-    "faiss-cpu>=1.10.0,<2",
-    "levenshtein>=0.27.3",
-    "pixelgen-pixelator-core>=1.0.2,<2",
+    "pixelgen-pixelator-core>=2.0.0,<3",
     "requests>=2.32.5",
 ]
 
@@ -73,8 +64,6 @@ dev = [
     "ruff",
     "pre-commit",
     "coverage",
-    "invoke",
-    "isort",
     "pytest",
     "pytest-mpl",
     "mypy",
@@ -85,8 +74,6 @@ dev = [
     "pytest-watcher",
     "ipython",
     "types-requests>=2.32.4.20260107",
-    "line-profiler>=5.0.2",
-    "ipykernel>=7.2.0",
 ]
 docs = [
     "pydata-sphinx-theme>=0.19.0",

@@ -17,6 +17,7 @@ from pixelator.pna.config.panel.tables import (
     stored_panel_marker_columns,
     write_panel_tables,
 )
+from pixelator.pna.pixeldataset.io.pxl_file import DERIVED_OBSM_KEYS
 from pixelator.pna.utils import init_duckdb_conn
 
 if TYPE_CHECKING:
@@ -210,6 +211,9 @@ class PixelFileWriter:
         stored there and ``uns["panel_metadata"]`` are left out. Reading the
         file joins the panel columns back onto ``var``.
 
+        The ``clr`` and ``log1p`` entries of ``obsm`` are left out too, as
+        they are computed from X when the file is read.
+
         Args:
             adata: The AnnData object to write.
 
@@ -248,6 +252,8 @@ class PixelFileWriter:
         )
 
         for key in adata.obsm:
+            if key in DERIVED_OBSM_KEYS:
+                continue
             obsm_layer = adata.obsm[key].reset_index(names="index")
             self._connection.sql(
                 f"""

@@ -20,17 +20,14 @@ nitpicky = True
 nitpick_ignore_regex = [
     # --- Unable to resolve intersphinx inventory ---
     (r"py:.*", r"polars\..*"),
-    (r"py:.*", r"cutadapt\..*"),
     (r"py:.*", r"numpy\..*"),
     (r"py:.*", r"duckdb\..*"),
-    (r"py:.*", r"faiss\..*"),
     # --- Private, internal, TypeVar, protocol-base, and native targets ---
     # These come from annotations, base-class lists, or TypeVars in the source code.
     (
         r"py:.*",
-        r"(Edge|Vertex|VertexSequence|AmpliconBuilder|BarcodeDemuxer"
-        r"|DemuxFilenamePolicy|PipelineRunner|StatisticsClass"
-        r"|NetworkxBasedVertexClustering|T|mpctx_Process)",
+        r"(Edge|Vertex|VertexSequence"
+        r"|NetworkxBasedVertexClustering|T)",
     ),
     (r"py:.*", r"(_SummaryStatsDict|_PartitionCandidate|_COMPONENT_BATCH_SIZE)"),
     (r"py:.*", r"pixelator_core\.PyGraphProperties"),
@@ -176,9 +173,7 @@ intersphinx_mapping = {
     "polars": ("https://docs.pola.rs/api/python/stable/", None),
     "pydantic": ("https://docs.pydantic.dev/latest/", None),
     "scanpy": ("https://scanpy.readthedocs.io/en/stable/", None),
-    "anndata": ("https://anndata.readthedocs.io/en/stable/", None),
-    "cutadapt": ("https://cutadapt.readthedocs.io/en/stable/", None),
-    "dnaio": ("https://dnaio.readthedocs.io/en/stable/", None),
+    "anndata": ("https://anndata.scverse.org/en/stable/", None),
     "pyarrow": ("https://arrow.apache.org/docs/", None),
     "networkx": ("https://networkx.org/documentation/stable/", None),
     "click": ("https://click.palletsprojects.com/en/stable/", None),

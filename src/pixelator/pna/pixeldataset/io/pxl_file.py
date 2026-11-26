@@ -33,6 +33,10 @@ PXL_FILE_MANDATOR_TABLES = [
 PXL_FILE_ADATA_TABLES = ["__adata__X", "__adata__var", "__adata__obs", "__adata__uns"]
 PXL_FILE_OTHER_TABLES = ["edgelist", "metadata", "layouts", "proximity"]
 
+# obsm keys computed from X on read. They are never stored, as they would go stale
+# whenever X is rebuilt.
+DERIVED_OBSM_KEYS = frozenset({"clr", "log1p"})
+
 
 class NullPxlFileError(PixelatorBaseException):
     """Raised when a reader is asked to open a null pxl file.

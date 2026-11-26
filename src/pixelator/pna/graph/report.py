@@ -16,7 +16,7 @@ from pixelator.pna.report.models.base import SampleReport
 class GraphStatistics:
     """Graph statistics for a sample."""
 
-    # Raw input from collapse to graph
+    # Raw input from aggregate to graph
     molecules_input: int = 0
     reads_input: int = 0
 
