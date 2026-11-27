@@ -36,6 +36,20 @@ class TestPixelFileWriter:
             )
         assert setting == str(duckdb_tmp.absolute())
 
+    def test_open_applies_memory_limit_and_threads(self, tmp_path):
+        """The writer's DuckDB connection takes the memory limit and thread count."""
+        with PixelFileWriter(
+            tmp_path / "file.pxl", memory_limit=2 * 10**9, threads=3
+        ) as writer:
+            con = writer.get_connection()
+            memory_limit = con.execute(
+                "SELECT current_setting('memory_limit')"
+            ).fetchone()[0]
+            threads = con.execute("SELECT current_setting('threads')").fetchone()[0]
+        # 2G is 2000000000 bytes, which init_duckdb_conn expresses as 2000 MiB.
+        assert memory_limit == "1.9 GiB"
+        assert threads == 3
+
     def test_open_defaults_temp_directory_to_tmp(self, tmp_path, monkeypatch):
         """The writer should default the DuckDB spill directory to /tmp when env is unset.
 

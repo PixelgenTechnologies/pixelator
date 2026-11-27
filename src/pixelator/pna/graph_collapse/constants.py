@@ -12,3 +12,7 @@ DEFAULT_MAX_DEGREE = 1
 # Maximum Hamming distance (inclusive) between a searched node's UMI and a candidate's
 # UMI for the node to be collapsed into that candidate.
 DEFAULT_HAMMING_THRESHOLD = 2
+
+# Components are collapsed and written in batches of about this many edges. A batch
+# holds whole components, so a larger component forms a batch of its own.
+DEFAULT_BATCH_EDGES = 20_000_000

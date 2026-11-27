@@ -4,9 +4,26 @@ A UMI sequencing error is unlikely to recur, so an erroneous UMI typically shows
 leaf in its component's graph. The Rust binding ``pixelator_core.graph_collapse``
 searches every node whose degree is at most ``max_degree`` (leaves by default) and finds,
 for each, the nearest UMI on the same side within a Hamming-distance cutoff,
-and returns ``(original, corrected)`` UMIs. It does not know markers. Three SQL
-statements finish the job: drop pairs whose markers differ, rename the remaining
-original UMIs, then merge edges that are identical after that rename.
+and returns ``(component, original, corrected)`` rows. It does not know markers. Three
+SQL steps finish the job: drop pairs whose markers differ, rename the remaining
+original UMIs, and merge edges that are identical after that rename.
+
+The steps of a batch pass data through temp objects on the DuckDB connection, so
+their order in ``_collapse_batch`` matters:
+
+- ``select_batch`` creates the view ``_batch_edges`` and the table ``_batch_components``.
+- ``store_renames`` creates ``_renames`` from the binding's output.
+- ``drop_renames_with_different_markers`` narrows ``_renames`` and creates ``_umi_marker``.
+- ``collapsed_sequences`` reads ``_renames`` and ``_umi_marker``.
+- ``write_collapsed_edges`` reads ``_batch_edges`` and ``_renames``.
+
+The batching and input access live in ``batches``, and the binding and SQL steps in
+``renames``.
+
+The input edgelist is processed in batches of whole components and written to a new
+pxl file as it goes, so memory follows the batch size rather than the file size. Every
+step works within one component: a rename only applies to the component it was found
+in, and the marker check only looks at markers recorded in that component.
 
 Copyright © 2026 Pixelgen Technologies AB.
 """
@@ -14,178 +31,137 @@ Copyright © 2026 Pixelgen Technologies AB.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from collections import Counter
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import duckdb
+from anndata import AnnData
 
 from pixelator.pna.anndata import pna_edgelist_to_anndata
 from pixelator.pna.config.panel import PNAAntibodyPanel
+from pixelator.pna.graph_collapse.batches import (
+    SOURCE,
+    attach_input,
+    component_sizes,
+    detach_input,
+    plan_component_batches,
+    select_batch,
+)
+from pixelator.pna.graph_collapse.constants import DEFAULT_BATCH_EDGES
+from pixelator.pna.graph_collapse.renames import (
+    CollapseParams,
+    collapsed_sequences,
+    drop_renames_with_different_markers,
+    fetch_batch_edges,
+    search_renames,
+    store_renames,
+    write_collapsed_edges,
+)
 from pixelator.pna.pixeldataset import read
 from pixelator.pna.pixeldataset.io import PixelFileWriter, PxlFile
-from pixelator.pna.utils import init_duckdb_conn
-from pixelator.pna.utils.two_bit_encoding import unpack_2bits
 
 logger = logging.getLogger(__name__)
 
-_COUNT_COLUMNS = ("read_count", "uei_count", "corrected_read_count")
 
-
-def decode_umi(value: int, length: int) -> bytes:
-    """Decode a 2-bit-packed UMI integer into its nucleotide sequence.
-
-    Args:
-        value: The packed UMI value, as stored in an edgelist's ``umi1``/``umi2`` column.
-        length: The number of nucleotides the UMI was packed from.
-
-    Returns:
-        The decoded nucleotide sequence.
-
-    """
-    return unpack_2bits(int(value), length)
+def _merged_counts(first: dict[int, int], second: dict[int, int]) -> dict[int, int]:
+    """Add two ``{value: count}`` distributions, keeping the values in ascending order."""
+    merged = Counter(first)
+    merged.update(second)
+    return dict(sorted(merged.items()))
 
 
 @dataclass
 class GraphCollapseResult:
-    """Stats the graph-collapse report reads after the collapse.
+    """Counts of a collapse, for one batch or for the whole run.
 
     ``component_count``, ``nodes_considered``, ``targets_found`` and the two
     distributions come from the binding. ``targets_found`` and the
     distributions describe the matches the search kept, before pairs with
     different markers are dropped, so ``nodes_collapsed`` can be smaller.
+    A new instance is an empty result, which ``merge`` adds batches to.
     """
 
-    component_count: int
-    nodes_considered: int
-    targets_found: int
-    bfs_distance_distribution: dict[int, int]
-    hamming_distance_distribution: dict[int, int]
-    nodes_collapsed: int
-    collapsed_sequences: list[dict]
+    component_count: int = 0
+    nodes_considered: int = 0
+    targets_found: int = 0
+    bfs_distance_distribution: dict[int, int] = field(default_factory=dict)
+    hamming_distance_distribution: dict[int, int] = field(default_factory=dict)
+    nodes_collapsed: int = 0
+    collapsed_sequences: list[dict] = field(default_factory=list)
+
+    def merge(self, other: GraphCollapseResult) -> None:
+        """Add the counts of ``other`` to this result, and append its sequences."""
+        self.component_count += other.component_count
+        self.nodes_considered += other.nodes_considered
+        self.targets_found += other.targets_found
+        self.bfs_distance_distribution = _merged_counts(
+            self.bfs_distance_distribution, other.bfs_distance_distribution
+        )
+        self.hamming_distance_distribution = _merged_counts(
+            self.hamming_distance_distribution, other.hamming_distance_distribution
+        )
+        self.nodes_collapsed += other.nodes_collapsed
+        self.collapsed_sequences.extend(other.collapsed_sequences)
 
 
-def _store_renames(con: duckdb.DuckDBPyConnection, collapsed) -> None:
-    """Copy the binding output into a table that later statements can modify."""
-    con.register("_renames_arrow", collapsed)
-    con.execute("""
-        CREATE OR REPLACE TEMP TABLE _renames AS
-        SELECT original, corrected FROM _renames_arrow
-    """)
-    con.unregister("_renames_arrow")
-
-
-def drop_renames_with_different_markers(con: duckdb.DuckDBPyConnection) -> None:
-    """Delete ``_renames`` rows whose original and corrected UMI markers differ.
-
-    ``marker_1`` is the marker of ``umi1`` and ``marker_2`` is the marker of
-    ``umi2``. A pair is removed when any marker recorded for the original UMI
-    differs from any marker recorded for the corrected UMI.
-
-    Args:
-        con: Connection with an ``edgelist`` table and a ``_renames`` table.
-
-    """
-    con.execute("""
-        CREATE OR REPLACE TEMP TABLE _umi_marker AS
-        SELECT DISTINCT umi1 AS umi, marker_1 AS marker FROM edgelist
-        UNION
-        SELECT DISTINCT umi2, marker_2 FROM edgelist
-    """)
-    con.execute("""
-        DELETE FROM _renames
-        USING _umi_marker AS original_marker, _umi_marker AS corrected_marker
-        WHERE _renames.original = original_marker.umi
-          AND _renames.corrected = corrected_marker.umi
-          AND original_marker.marker IS DISTINCT FROM corrected_marker.marker
-    """)
-
-
-def rename_umis(con: duckdb.DuckDBPyConnection) -> None:
-    """Replace each remaining original UMI with its corrected UMI, on both ends.
-
-    Args:
-        con: Connection with an ``edgelist`` table and a ``_renames`` table.
-
-    """
-    con.execute("""
-        UPDATE edgelist
-        SET umi1 = _renames.corrected
-        FROM _renames
-        WHERE edgelist.umi1 = _renames.original
-    """)
-    con.execute("""
-        UPDATE edgelist
-        SET umi2 = _renames.corrected
-        FROM _renames
-        WHERE edgelist.umi2 = _renames.original
-    """)
-
-
-def collapse_identical_edges(con: duckdb.DuckDBPyConnection) -> None:
-    """Merge edgelist rows that share every non-count column, summing counts.
-
-    ``read_count``, ``uei_count``, and ``corrected_read_count`` are the count
-    columns, when the table has them. Every other column is part of the edge
-    identity, so two rows with the same UMIs and a different marker stay
-    separate, as do the same UMIs in a different component.
-
-    Args:
-        con: Connection with an ``edgelist`` table.
-
-    """
-    columns = [row[0] for row in con.execute("DESCRIBE edgelist").fetchall()]
-    count_columns = [column for column in _COUNT_COLUMNS if column in columns]
-    group_columns = [column for column in columns if column not in count_columns]
-    select_sql = ", ".join(
-        f"SUM({column}) AS {column}" if column in count_columns else column
-        for column in columns
-    )
-    con.execute(f"""
-        CREATE OR REPLACE TABLE edgelist AS
-        SELECT {select_sql}
-        FROM edgelist
-        GROUP BY {", ".join(group_columns)}
-        ORDER BY component
-    """)
-
-
-def _collapsed_sequences(
+def _collapse_batch(
     con: duckdb.DuckDBPyConnection,
+    components: list[str],
+    params: CollapseParams,
+    *,
     umi1_length: int,
     umi2_length: int,
-) -> list[dict]:
-    found = con.execute("""
-        SELECT
-            r.original,
-            r.corrected,
-            ends.component,
-            BOOL_OR(ends.side = 'umi1') AS seen_as_umi1
-        FROM _renames r
-        JOIN (
-            SELECT component, umi1 AS umi, 'umi1' AS side FROM edgelist
-            UNION ALL
-            SELECT component, umi2, 'umi2' FROM edgelist
-        ) ends
-            ON ends.umi = r.original
-        GROUP BY r.original, r.corrected, ends.component
-    """).fetchdf()
+    report_collapsed_sequences: bool,
+) -> GraphCollapseResult:
+    """Collapse one batch of components and append its edges to the output.
 
-    rows = []
-    for row in found.itertuples(index=False):
-        length = umi1_length if row.seen_as_umi1 else umi2_length
-        rows.append(
-            {
-                "component": row.component,
-                "original_sequence": decode_umi(int(row.original), length).decode(),
-                "corrected_sequence": decode_umi(int(row.corrected), length).decode(),
-            }
-        )
-    rows.sort(key=lambda record: (record["component"], record["original_sequence"]))
-    return rows
+    Args:
+        con: Connection with the input attached as ``SOURCE``.
+        components: Consecutive components, in component order.
+        params: The binding settings.
+        umi1_length: Nucleotide length used to decode a renamed UMI seen as umi1.
+        umi2_length: Nucleotide length used to decode a renamed UMI seen only as umi2.
+        report_collapsed_sequences: Decode each kept rename into nucleotide sequences.
+
+    Returns:
+        The batch's counts and, when requested, collapsed-sequence rows.
+
+    """
+    select_batch(con, f"{SOURCE}.edgelist", components)
+    renames, stats = search_renames(fetch_batch_edges(con), params)
+    store_renames(con, renames)
+    drop_renames_with_different_markers(con)
+    # The binding maps each original UMI to one corrected UMI per
+    # component, so every kept row is a distinct collapsed node.
+    nodes_collapsed = con.execute("SELECT COUNT(*) FROM _renames").fetchone()[0]  # type: ignore[index]
+    sequences = (
+        collapsed_sequences(con, umi1_length, umi2_length)
+        if report_collapsed_sequences
+        else []
+    )
+    write_collapsed_edges(con)
+    return GraphCollapseResult(
+        component_count=stats["total_components"],
+        nodes_considered=stats["nodes_considered"],
+        targets_found=stats["targets_found"],
+        bfs_distance_distribution=stats["bfs_distance_distribution"],
+        hamming_distance_distribution=stats["hamming_distance_distribution"],
+        nodes_collapsed=nodes_collapsed,
+        collapsed_sequences=sequences,
+    )
+
+
+def _rebuild_adata(con: duckdb.DuckDBPyConnection, panel: PNAAntibodyPanel) -> AnnData:
+    """Build the AnnData from the collapsed edgelist, sorted by component."""
+    logger.info("Building AnnData from the collapsed edgelist")
+    adata = pna_edgelist_to_anndata(con, panel)
+    return adata[adata.obs_names.sort_values(), :]
 
 
 def run_graph_collapse(
-    pxl_file_target: PxlFile,
+    input_pxl_file: PxlFile,
+    output_path: Path,
     *,
     n_threads: int,
     bfs_distance: int,
@@ -196,17 +172,23 @@ def run_graph_collapse(
     report_collapsed_sequences: bool = False,
     memory_limit: int | None = None,
     temp_directory: str | Path | None = None,
+    batch_edges: int = DEFAULT_BATCH_EDGES,
 ) -> GraphCollapseResult:
-    """Collapse the pxl edgelist with the Rust binding and rename matching UMIs.
+    """Collapse the edgelist of ``input_pxl_file`` into a new pxl file at ``output_path``.
 
-    The edgelist is streamed in component order. ``to_arrow_reader`` is the
-    DuckDB method that yields the record-batch reader the binding consumes. The
-    binding sorts the rows within each component itself, so the result does not
-    depend on the order DuckDB returns them in.
+    The output starts empty, with the input's metadata and panel. The input's
+    components are processed in batches of about ``batch_edges`` edges, in
+    component order: the binding finds the renames, pairs with different
+    markers are dropped, and the renamed and merged edges are appended to the
+    output edgelist. Finally the output's AnnData is rebuilt from the collapsed
+    edgelist. Tables other than these (e.g. layouts) are not carried over, as
+    the collapse makes them stale.
 
     Args:
-        pxl_file_target: Copied pxl file updated in place.
-        n_threads: Passed to the binding as ``n_threads``.
+        input_pxl_file: The pxl file to collapse. It is not modified.
+        output_path: Where the collapsed pxl file is written. An existing file
+            is replaced.
+        n_threads: Passed to the binding as ``n_threads``, and DuckDB's thread count.
         bfs_distance: Passed to the binding as ``bfs_threshold``.
         hamming_threshold: Passed to the binding as ``hamming_threshold``.
         umi1_length: Nucleotide length used to decode a renamed UMI seen as umi1.
@@ -215,77 +197,69 @@ def run_graph_collapse(
             degree are not searched. The default, 1, investigates only leaves.
         report_collapsed_sequences: Decode each kept rename into nucleotide
             sequences. Off unless the CLI is writing the collapsed-sequence TSV.
-        memory_limit: Soft memory limit in bytes for the DuckDB connections that
-            read and rewrite the edgelist. When set, DuckDB spills to disk once
-            the limit is reached. The native search is not covered by it.
+        memory_limit: Soft memory limit in bytes for DuckDB. When set, DuckDB
+            spills to disk once the limit is reached. The native search is not
+            covered by it; its memory follows ``batch_edges``.
         temp_directory: DuckDB spill directory. Defaults to
             ``PIXELATOR_DUCKDB_TEMP_DIR`` or ``/tmp``.
+        batch_edges: Number of edges a batch of components is filled to.
 
     Returns:
         Counts and, when requested, the collapsed-sequence rows.
 
     """
-    import pixelator_core
+    # The panel comes from the file only.
+    input_dataset = read(input_pxl_file.path)
+    panel = PNAAntibodyPanel.from_pxl_dataset(input_dataset)
 
-    # The record-batch reader keeps this connection busy, so the edgelist is
-    # updated afterwards on the writer's connection.
-    with init_duckdb_conn(
-        str(pxl_file_target.path),
-        read_only=True,
+    params = CollapseParams(
+        n_threads=n_threads,
+        bfs_distance=bfs_distance,
+        hamming_threshold=hamming_threshold,
+        max_degree=max_degree,
+    )
+    result = GraphCollapseResult()
+
+    with PixelFileWriter(
+        output_path,
+        exits_ok=True,
+        temp_dir=temp_directory,
         memory_limit=memory_limit,
         threads=n_threads,
-        temp_dir=temp_directory,
-    ) as con:
-        con.execute("""
-            SELECT umi1, umi2, CAST(component AS VARCHAR) AS component
-            FROM edgelist
-            ORDER BY component
-        """)
-        reader = con.to_arrow_reader()
-        logger.info("Starting graph collapse")
-        collapsed, stats = pixelator_core.graph_collapse(
-            reader,
-            n_threads,
-            bfs_threshold=bfs_distance,
-            hamming_threshold=hamming_threshold,
-            max_degree=max_degree,
+    ) as writer:
+        con = attach_input(writer, input_pxl_file)
+        writer.write_metadata(input_pxl_file.metadata())
+        writer.write_panel(panel)
+        sizes = component_sizes(con)
+        batches = plan_component_batches(sizes, batch_edges)
+        logger.info(
+            "Collapsing %d components in %d batches",
+            len(sizes),
+            len(batches),
         )
-        _store_renames(con, collapsed)
-        drop_renames_with_different_markers(con)
-        sequences = []
-        if report_collapsed_sequences:
-            logger.info("Starting collapsed-sequence collection")
-            sequences = _collapsed_sequences(con, umi1_length, umi2_length)
-        con.execute("SELECT original, corrected FROM _renames")
-        kept = con.to_arrow_table()
 
-    # The binding maps each original UMI to one corrected UMI, so every kept
-    # row is a distinct collapsed node.
-    nodes_collapsed = kept.num_rows
-    if nodes_collapsed:
-        # Rebuild counts from the markers already in var. Using the full panel
-        # would put markers removed by an earlier step (e.g. hashing clones
-        # removed by sample calling) back. The panel comes from the file only.
-        input_dataset = read(pxl_file_target.path)
-        panel = PNAAntibodyPanel.from_pxl_dataset(input_dataset)
-        markers = list(input_dataset.adata().var_names)
-        with PixelFileWriter(pxl_file_target.path, temp_dir=temp_directory) as writer:
-            con = writer.get_connection()
-            if memory_limit is not None:
-                con.execute(f"SET memory_limit = '{memory_limit / 10**6}MiB'")
-            _store_renames(con, kept)
-            rename_umis(con)
-            collapse_identical_edges(con)
-            adata = pna_edgelist_to_anndata(con, panel, markers=markers)
-            adata = adata[adata.obs_names.sort_values(), :]
-            writer.write_adata(adata)
+        for index, components in enumerate(batches, start=1):
+            result.merge(
+                _collapse_batch(
+                    con,
+                    components,
+                    params,
+                    umi1_length=umi1_length,
+                    umi2_length=umi2_length,
+                    report_collapsed_sequences=report_collapsed_sequences,
+                )
+            )
+            logger.info(
+                "Batch %d/%d done: %d components processed",
+                index,
+                len(batches),
+                result.component_count,
+            )
 
-    return GraphCollapseResult(
-        component_count=stats["total_components"],
-        nodes_considered=stats["nodes_considered"],
-        targets_found=stats["targets_found"],
-        bfs_distance_distribution=stats["bfs_distance_distribution"],
-        hamming_distance_distribution=stats["hamming_distance_distribution"],
-        nodes_collapsed=nodes_collapsed,
-        collapsed_sequences=sequences,
+        detach_input(con)
+        writer.write_adata(_rebuild_adata(con, panel))
+
+    result.collapsed_sequences.sort(
+        key=lambda record: (record["component"], record["original_sequence"])
     )
+    return result

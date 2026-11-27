@@ -53,6 +53,8 @@ class PixelFileWriter:
         exits_ok: bool = False,
         temp_dir: Path | str | None = None,
         temp_dir_size_limit: str | None = None,
+        memory_limit: int | None = None,
+        threads: int | None = None,
     ):
         """Initialize the PixelFileWriter.
 
@@ -62,11 +64,15 @@ class PixelFileWriter:
             temp_dir: DuckDB spill directory. Defaults to ``PIXELATOR_DUCKDB_TEMP_DIR`` or ``/tmp``.
             temp_dir_size_limit: DuckDB spill size limit. Defaults to
                 ``PIXELATOR_DUCKDB_MAX_TEMP_DIR_SIZE`` when set.
+            memory_limit: DuckDB memory limit in bytes. No limit when ``None``.
+            threads: Number of DuckDB threads. DuckDB decides when ``None``.
         """
         self.path = path
         self.exists_ok = exits_ok
         self._temp_dir = temp_dir
         self._temp_dir_size_limit = temp_dir_size_limit
+        self._memory_limit = memory_limit
+        self._threads = threads
         if self.exists_ok and self.path.exists():
             self.path.unlink()
         self._connection: duckdb.DuckDBPyConnection = None  # type: ignore
@@ -78,6 +84,8 @@ class PixelFileWriter:
             read_only=False,
             temp_dir=self._temp_dir,
             temp_dir_size_limit=self._temp_dir_size_limit,
+            memory_limit=self._memory_limit,
+            threads=self._threads,
         )
 
     def close(self):
