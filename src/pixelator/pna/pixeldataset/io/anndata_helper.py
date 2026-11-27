@@ -120,7 +120,7 @@ class AnnDataHelper:
                 db_name,
                 None,
                 column_renames=self._renames_of_stored_columns(
-                    session, qb, f"{db_name}.__adata__X", renames
+                    session, qb, db_name, "__adata__X", renames
                 ),
             )
         ).to_pandas()
@@ -132,7 +132,7 @@ class AnnDataHelper:
                 db_name,
                 None,
                 column_renames=self._renames_of_stored_columns(
-                    session, qb, f"{db_name}.__adata__obs", hash_count_renames
+                    session, qb, db_name, "__adata__obs", hash_count_renames
                 ),
             )
         ).to_pandas()
@@ -151,15 +151,9 @@ class AnnDataHelper:
                     [f"__adata__obsm_{key}" for key in DERIVED_OBSM_KEYS]
                 )
             )
-            .select(
-                pl.concat_str(
-                    [pl.col("database"), pl.col("schema"), pl.col("name")],
-                    separator=".",
-                ).alias("name")
-            )
+            .select("schema", "name")
             .collect()
-            .get_column("name")
-            .to_list()
+            .rows()
         )
 
         obsm = {
@@ -170,15 +164,16 @@ class AnnDataHelper:
                         table,
                         None,
                         column_renames=self._renames_of_stored_columns(
-                            session, qb, table, renames
+                            session, qb, db_name, table, renames, schema=schema
                         ),
+                        schema=schema,
                     ),
                 )
                 .to_pandas()
                 .set_index("index")
                 .rename_axis(index={"index": "component"})
             )
-            for table in obsm_tables
+            for schema, table in obsm_tables
         }
 
         var = var.set_index("index").rename_axis(index={"index": "marker_id"})
@@ -198,8 +193,10 @@ class AnnDataHelper:
     def _renames_of_stored_columns(
         session: PixelDataViewerSession,
         qb: QueryBuilder,
+        db_name: str,
         table: str,
         renames: Mapping[str, str],
+        schema: str = "main",
     ) -> dict[str, str]:
         """Return the renames that apply to columns ``table`` has.
 
@@ -209,7 +206,7 @@ class AnnDataHelper:
         if not renames:
             return {}
         columns = set(
-            session.execute_eager(qb.table_columns_query(table))[
+            session.execute_eager(qb.table_columns_query(db_name, table, schema))[
                 "column_name"
             ].to_list()
         )
