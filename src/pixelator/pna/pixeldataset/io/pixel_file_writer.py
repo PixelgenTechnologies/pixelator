@@ -13,6 +13,7 @@ import duckdb
 import polars as pl
 from anndata import AnnData
 
+from pixelator.common.duckdb_utils import qualified_name, quote_identifier
 from pixelator.pna.config.panel.tables import (
     stored_panel_marker_columns,
     write_panel_tables,
@@ -200,9 +201,8 @@ class PixelFileWriter:
         tables = self._connection.sql("SHOW ALL TABLES")
         adata_tables = tables.pl().filter((pl.col("name").str.starts_with("__adata__")))
         for table in adata_tables.iter_rows(named=True):
-            self._connection.sql(
-                f'DROP TABLE "{table["database"]}"."{table["schema"]}"."{table["name"]}"'
-            )
+            name = qualified_name(table["database"], table["schema"], table["name"])
+            self._connection.sql(f"DROP TABLE {name}")
 
     def write_adata(self, adata: AnnData) -> None:
         """Write the AnnData object to the PXL file.
@@ -255,11 +255,8 @@ class PixelFileWriter:
             if key in DERIVED_OBSM_KEYS:
                 continue
             obsm_layer = adata.obsm[key].reset_index(names="index")
-            self._connection.sql(
-                f"""
-                CREATE TABLE __adata__obsm_{key} AS SELECT * FROM obsm_layer;
-                """,
-            )
+            table = quote_identifier(f"__adata__obsm_{key}")
+            self._connection.sql(f"CREATE TABLE {table} AS SELECT * FROM obsm_layer")
 
     def write_panel(self, panel: PNAAntibodyPanel) -> None:
         """Write the ``panels`` and ``panel_sources`` tables for ``panel``.

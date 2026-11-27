@@ -27,6 +27,7 @@ from .pxl_file import DERIVED_OBSM_KEYS
 from .query_builder import QueryBuilder
 
 _MAX_REPORTED_MARKERS = 10
+_OBSM_TABLE_PREFIX = "__adata__obsm_"
 
 
 class AnnDataHelper:
@@ -120,7 +121,7 @@ class AnnDataHelper:
                 db_name,
                 None,
                 column_renames=self._renames_of_stored_columns(
-                    session, qb, f"{db_name}.__adata__X", renames
+                    session, qb, (db_name, "__adata__X"), renames
                 ),
             )
         ).to_pandas()
@@ -132,7 +133,7 @@ class AnnDataHelper:
                 db_name,
                 None,
                 column_renames=self._renames_of_stored_columns(
-                    session, qb, f"{db_name}.__adata__obs", hash_count_renames
+                    session, qb, (db_name, "__adata__obs"), hash_count_renames
                 ),
             )
         ).to_pandas()
@@ -141,44 +142,41 @@ class AnnDataHelper:
         uns = json.loads(uns_df.row(0)[0]) if not uns_df.is_empty() else None
 
         tables = session.execute_eager(qb.adata_obsm_table_names_query(db_name))
-        obsm_tables = (
+        # Table names come from the file and may contain any characters, so they
+        # are only passed on as names to quote, never as SQL.
+        obsm_tables: list[tuple[str, str]] = list(
             tables.lazy()
             .filter(
-                (pl.col("name").str.starts_with("__adata__obsm"))
+                (pl.col("name").str.starts_with(_OBSM_TABLE_PREFIX))
                 & (pl.col("database") == db_name)
                 # Files written by older versions may still store derived keys.
                 & ~pl.col("name").is_in(
-                    [f"__adata__obsm_{key}" for key in DERIVED_OBSM_KEYS]
+                    [f"{_OBSM_TABLE_PREFIX}{key}" for key in DERIVED_OBSM_KEYS]
                 )
             )
-            .select(
-                pl.concat_str(
-                    [pl.col("database"), pl.col("schema"), pl.col("name")],
-                    separator=".",
-                ).alias("name")
-            )
+            .select("schema", "name")
             .collect()
-            .get_column("name")
-            .to_list()
+            .iter_rows()
         )
 
         obsm = {
-            table.split("__adata__obsm_")[1]: (
+            table[len(_OBSM_TABLE_PREFIX) :]: (
                 session.execute_eager(
                     qb.adata_obsm_query(
                         db_name,
                         table,
                         None,
                         column_renames=self._renames_of_stored_columns(
-                            session, qb, table, renames
+                            session, qb, (db_name, schema, table), renames
                         ),
+                        schema=schema,
                     ),
                 )
                 .to_pandas()
                 .set_index("index")
                 .rename_axis(index={"index": "component"})
             )
-            for table in obsm_tables
+            for schema, table in obsm_tables
         }
 
         var = var.set_index("index").rename_axis(index={"index": "marker_id"})
@@ -198,10 +196,13 @@ class AnnDataHelper:
     def _renames_of_stored_columns(
         session: PixelDataViewerSession,
         qb: QueryBuilder,
-        table: str,
+        table: tuple[str, ...],
         renames: Mapping[str, str],
     ) -> dict[str, str]:
         """Return the renames that apply to columns ``table`` has.
+
+        ``table`` holds the unquoted parts of the table name, see
+        :meth:`QueryBuilder.table_columns_query`.
 
         A rename of a column the table lacks is dropped, for example a hashing
         clone in a table written after sample calling.
@@ -209,7 +210,7 @@ class AnnDataHelper:
         if not renames:
             return {}
         columns = set(
-            session.execute_eager(qb.table_columns_query(table))[
+            session.execute_eager(qb.table_columns_query(*table))[
                 "column_name"
             ].to_list()
         )

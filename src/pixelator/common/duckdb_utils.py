@@ -18,6 +18,26 @@ import duckdb
 DEFAULT_DUCKDB_TEMP_DIR = Path("/tmp")
 
 
+def quote_identifier(name: str) -> str:
+    """Return ``name`` as a quoted DuckDB identifier.
+
+    Use it for every identifier that is not a literal in the code, such as the
+    table and column names read from a file's catalog.
+
+    Raises:
+        ValueError: If ``name`` contains a NUL character, which DuckDB treats as
+            the end of the SQL text.
+    """
+    if "\x00" in name:
+        raise ValueError(f"Invalid SQL identifier {name!r}: contains NUL.")
+    return '"' + name.replace('"', '""') + '"'
+
+
+def qualified_name(*parts: str) -> str:
+    """Return ``parts`` (e.g. database, schema, table) as a quoted dotted name."""
+    return ".".join(quote_identifier(part) for part in parts)
+
+
 def get_duckdb_temp_dir_from_env() -> Path | None:
     """Return ``PIXELATOR_DUCKDB_TEMP_DIR`` as a ``Path``, or ``None`` if unset."""
     value = os.environ.get("PIXELATOR_DUCKDB_TEMP_DIR")
