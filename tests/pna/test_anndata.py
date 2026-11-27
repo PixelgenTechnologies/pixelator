@@ -17,6 +17,7 @@ from pixelator.pna.pixeldataset.io import PixelFileWriter
 mock_antibody_panel = create_autospec(PNAAntibodyPanel)
 mock_antibody_panel.metadata = create_autospec(AntibodyPanelMetadata)
 mock_antibody_panel.markers = ["A", "B", "C"]
+mock_antibody_panel.markers_control = ["C"]
 # Each marker is duplicated in the panel,
 # on these parameters so this accounts for that.
 mock_antibody_panel.df = pd.DataFrame(
@@ -258,6 +259,37 @@ def test_pna_edgelist_to_anndata(pixelconnection):
     assert_frame_equal(
         adata.obs.sort_index().sort_index(axis="columns"),
         expected_obs.sort_index(axis="columns"),
+    )
+
+
+def test_isotype_fraction_counts_a_repeated_control_marker_once(pixelconnection):
+    """A control marker with two panel rows must not be double counted."""
+    rows = [
+        {
+            "marker_id": "A",
+            "control": False,
+            "sequence_1": "AAAA",
+            "sequence_2": "AAAA",
+        },
+        {
+            "marker_id": "B",
+            "control": False,
+            "sequence_1": "CCCC",
+            "sequence_2": "CCCC",
+        },
+        {"marker_id": "C", "control": True, "sequence_1": "GGGG", "sequence_2": "GGGG"},
+        {"marker_id": "C", "control": True, "sequence_1": "TTTT", "sequence_2": "TTTT"},
+    ]
+    panel = PNAAntibodyPanel.from_metadata(
+        pd.DataFrame(rows).set_index("marker_id"),
+        AntibodyPanelMetadata(name="repeated", version="1.0.0"),
+    )
+
+    adata = pna_edgelist_to_anndata(pixelconnection, panel)
+
+    assert list(adata.var_names) == ["A", "B", "C"]
+    assert adata.obs["isotype_fraction"].sort_index().tolist() == pytest.approx(
+        [1 / 7, 0.5, 0.0]
     )
 
 

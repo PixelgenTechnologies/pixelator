@@ -239,6 +239,13 @@ def test_one_marker_id_with_two_sequence_pairs_is_rejected():
     assert "force=True" in str(err.value)
 
 
+def test_a_panel_with_a_repeated_marker_id_is_rejected():
+    panel = _panel("1.0.0", [_marker("CD3", "AAAA"), _marker("CD3", "CCCC")])
+
+    with pytest.raises(PanelConflictError, match="marker id 'CD3'"):
+        align_panels([panel])
+
+
 def test_an_id_conflict_within_one_product_is_rejected():
     old = _panel("1.0.0", [_marker("CD3", "AAAA")])
     new = _panel("1.0.1", [_marker("CD3", "CCCC")])

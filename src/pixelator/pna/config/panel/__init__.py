@@ -21,10 +21,12 @@ from pixelator.pna.config.panel.hashing import (
     sample_hashing_mask,
     split_hashing_marker_id,
 )
+from pixelator.pna.config.panel.validation import ROW_COLUMNS
 
 __all__ = [
     "ORIGINAL_HASH_COUNTS_PREFIX",
     "PNAAntibodyPanel",
+    "ROW_COLUMNS",
     "PanelAlignment",
     "PanelConflictError",
     "PanelSource",

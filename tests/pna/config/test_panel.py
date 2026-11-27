@@ -251,16 +251,99 @@ def _marker_row(marker_id: str, sequence: str, **extra) -> dict:
     return row
 
 
-def test_duplicate_marker_ids_are_rejected():
-    """Marker ids must be unique even when sequences differ."""
-    frame = pd.DataFrame(
-        [_marker_row("CD3", "AAAA"), _marker_row("CD3", "CCCC")]
-    ).set_index("marker_id")
-    with pytest.raises(AssertionError, match="marker_id were not unique"):
+def _repeated_marker_panel(**overrides) -> PNAAntibodyPanel:
+    """Build a panel where CD3 has two rows and CD4 has one."""
+    rows = [
+        _marker_row("CD3", "AAAA", uniprot_id="P07766", **overrides),
+        _marker_row("CD3", "CCCC", uniprot_id="P07766"),
+        _marker_row("CD4", "GGGG", uniprot_id="P01730"),
+    ]
+    return PNAAntibodyPanel.from_metadata(
+        pd.DataFrame(rows).set_index("marker_id"),
+        AntibodyPanelMetadata(name="base", version="1.0.0"),
+    )
+
+
+def test_marker_ids_can_repeat_when_the_other_columns_agree():
+    """Several sequence pairs can belong to one marker id."""
+    panel = _repeated_marker_panel()
+
+    assert panel.size == 3
+    assert panel.markers == ["CD3", "CD4"]
+
+
+def test_rows_sharing_a_marker_id_may_differ_in_their_row_columns():
+    """The sequences and the sample hashing index describe one row."""
+    rows = [
+        _marker_row("CD3", "AAAA", sample_hashing="1"),
+        _marker_row("CD3", "CCCC", sample_hashing="2"),
+    ]
+    PNAAntibodyPanel.from_metadata(
+        pd.DataFrame(rows).set_index("marker_id"),
+        AntibodyPanelMetadata(name="base", version="1.0.0"),
+    )
+
+
+def test_rows_sharing_a_marker_id_must_agree_on_the_other_columns():
+    """A repeated id with different marker columns is rejected and named."""
+    with pytest.raises(AssertionError, match=r"must agree.*'CD3': \['control'\]"):
+        _repeated_marker_panel(control=True)
+
+    rows = [
+        _marker_row("CD3", "AAAA", uniprot_id="P07766"),
+        _marker_row("CD3", "CCCC", uniprot_id="P01730"),
+    ]
+    with pytest.raises(AssertionError, match=r"'CD3': \['uniprot_id'\]"):
         PNAAntibodyPanel.from_metadata(
-            frame,
+            pd.DataFrame(rows).set_index("marker_id"),
             AntibodyPanelMetadata(name="base", version="1.0.0"),
         )
+
+
+def test_a_repeated_marker_id_still_needs_unique_sequences():
+    """The sequences stay unique even when the marker id repeats."""
+    rows = [_marker_row("CD3", "AAAA"), _marker_row("CD3", "AAAA")]
+    errors = PNAAntibodyPanel.validate_antibody_panel(
+        pd.DataFrame(rows).set_index("marker_id")
+    )
+    assert "All values in column: sequence_1 were not unique" in errors
+
+
+def test_marker_table_and_control_markers_list_each_marker_once():
+    """Repeated ids give one row in the marker table and one control entry."""
+    rows = [
+        _marker_row("CD3", "AAAA", control=True),
+        _marker_row("CD3", "CCCC", control=True),
+        _marker_row("CD4", "GGGG"),
+    ]
+    panel = PNAAntibodyPanel.from_metadata(
+        pd.DataFrame(rows).set_index("marker_id"),
+        AntibodyPanelMetadata(name="base", version="1.0.0"),
+    )
+
+    assert panel.markers_control == ["CD3"]
+    table = panel.marker_table()
+    assert list(table.index) == ["CD3", "CD4"]
+    assert list(table.columns) == ["control"]
+
+
+def test_marker_table_keeps_the_other_columns_in_panel_order(panel_df):
+    """Without repeats, the table is the panel without its row columns."""
+    panel = PNAAntibodyPanel.from_metadata(panel_df, _one_metadata())
+
+    assert_frame_equal(
+        panel.marker_table(), panel_df.drop(columns=["sequence_1", "sequence_2"])
+    )
+
+
+def test_equality_ignores_the_order_of_rows_sharing_a_marker_id():
+    """The rows of one marker id compare equal in any order."""
+    panel = _repeated_marker_panel()
+    reordered = PNAAntibodyPanel.from_metadata(
+        panel.df.iloc[::-1],
+        AntibodyPanelMetadata(name="base", version="1.0.0"),
+    )
+    assert panel == reordered
 
 
 def test_hashing_marker_ids_need_a_numeric_suffix_and_must_not_nest():

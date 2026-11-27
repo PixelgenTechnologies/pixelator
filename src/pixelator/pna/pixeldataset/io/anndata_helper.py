@@ -17,7 +17,7 @@ from anndata import concat as anndata_concat
 
 from pixelator.common.statistics import clr_transformation, log1p_transformation
 from pixelator.common.utils import logger
-from pixelator.pna.config.panel import ORIGINAL_HASH_COUNTS_PREFIX
+from pixelator.pna.config.panel import ORIGINAL_HASH_COUNTS_PREFIX, ROW_COLUMNS
 from pixelator.pna.config.panel.tables import has_panel_tables
 from pixelator.pna.pixeldataset.utils import update_metrics_anndata
 from pixelator.pna.utils import normalize_input_to_list, normalize_input_to_set
@@ -239,6 +239,10 @@ class AnnDataHelper:
         first, as the concatenated AnnData keeps the ``var`` of the first sample.
         Otherwise they come from the panel tables of the file, if it has them.
         Older files keep the panel columns on ``var`` and are left as they are.
+
+        ``var`` has one row per marker, so the columns that describe a single
+        panel row (the sequences and the sample hashing flag) are left out. A
+        marker id can have several rows. They stay in the panel tables.
         """
         aligned_rows = self._view.aligned_panel_rows()
         if aligned_rows:
@@ -254,8 +258,11 @@ class AnnDataHelper:
             )
         else:
             return var
+        panel_markers = panel_markers.drop(columns=list(ROW_COLUMNS), errors="ignore")
+        panel_markers = panel_markers[~panel_markers.index.duplicated()]
         # panel columns already on var (older files) are replaced
-        var = var.drop(columns=var.columns.intersection(panel_markers.columns))
+        replaced = [*panel_markers.columns, *ROW_COLUMNS]
+        var = var.drop(columns=var.columns.intersection(replaced))
         return var.join(panel_markers.reindex(var.index), how="left")
 
     def _apply_transformations(

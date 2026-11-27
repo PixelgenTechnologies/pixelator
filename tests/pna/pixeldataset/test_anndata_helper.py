@@ -35,7 +35,7 @@ class TestAnnDataHelper:
         adata_data = adata_data.copy()
         adata_data.obs["sample"] = "test_sample"
         adata_data.var = adata_data.var.join(
-            panel.df.reindex(adata_data.var_names), how="left"
+            panel.marker_table().reindex(adata_data.var_names), how="left"
         )
 
         helper = AnnDataHelper(pxl_dataset.view)

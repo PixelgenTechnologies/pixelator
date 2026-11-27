@@ -29,6 +29,14 @@ _REQUIRED_COLUMNS = {
 # and these should have unique values
 _UNIQUE_COLUMNS = ["sequence_1", "sequence_2"]
 
+# columns that describe one row, so rows sharing a marker id may differ in them.
+# For example, two rows of CD3 can have different sequences, but must have the
+# same control flag and uniprot_id.
+# sample_hashing is listed for hashing clones that will share one marker id
+# (for example B2M), where it will hold the hash index of each row. Today it is
+# still a yes/no flag.
+ROW_COLUMNS = frozenset({*_UNIQUE_COLUMNS, "sample_hashing"})
+
 # UniProt accession naming convention. The trailing alternative allows an empty id.
 _UNIPROT_ID_RE = re.compile(
     r"^[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}|$"
@@ -112,19 +120,38 @@ def _validate_column_types(panel_df: pd.DataFrame) -> list[str]:
 
 
 def _validate_unique_values(panel_df: pd.DataFrame) -> list[str]:
-    """Return errors when a unique column or the marker id repeats."""
+    """Return errors when a unique column repeats."""
     errors = []
     for col in _UNIQUE_COLUMNS:
         if not len(panel_df[col].unique()) == len(panel_df[col]):
             errors.append(f"All values in column: {col} were not unique")
-
-    if panel_df.index.duplicated().any():
-        duplicated = panel_df.index[panel_df.index.duplicated()].unique().tolist()
-        errors.append(
-            "All values in column: marker_id were not unique. "
-            f"Offending values: {duplicated}"
-        )
     return errors
+
+
+def _validate_repeated_marker_rows(panel_df: pd.DataFrame) -> list[str]:
+    """Return errors when rows sharing a marker id disagree on marker columns.
+
+    Several rows may share a marker id, for example several sequence pairs that
+    are counted as one marker. They only differ in the columns that describe
+    the row itself.
+    """
+    shared = panel_df[panel_df.index.duplicated(keep=False)]
+    columns = [col for col in panel_df.columns if col not in ROW_COLUMNS]
+    if shared.empty or not columns:
+        return []
+    n_values = shared[columns].groupby(level=0).nunique(dropna=False)
+    disagreements = {
+        str(marker_id): disagreeing.index[disagreeing].tolist()
+        for marker_id, disagreeing in (n_values > 1).iterrows()
+        if disagreeing.any()
+    }
+    if not disagreements:
+        return []
+    return [
+        "Rows that share a marker_id must agree on every column except "
+        f"{sorted(ROW_COLUMNS)}. Offending values (marker_id: columns): "
+        f"{disagreements}"
+    ]
 
 
 def _validate_control_column(panel_df: pd.DataFrame) -> list[str]:
@@ -219,6 +246,7 @@ def validate_antibody_panel(
     if validate_types:
         errors += _validate_column_types(panel_df)
     errors += _validate_unique_values(panel_df)
+    errors += _validate_repeated_marker_rows(panel_df)
     errors += _validate_marker_names(panel_df)
     errors += _validate_control_column(panel_df)
     errors += _validate_uniprot_ids(panel_df)

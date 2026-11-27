@@ -61,7 +61,7 @@ def test_load_panels_concatenates_the_panels(tmp_path):
 
 def test_load_panels_turns_overlapping_panels_into_a_usage_error(tmp_path):
     left = _write_panel_csv(tmp_path / "left.csv", "left", [("CD3", "AAAA")])
-    right = _write_panel_csv(tmp_path / "right.csv", "right", [("CD3", "CCCC")])
+    right = _write_panel_csv(tmp_path / "right.csv", "right", [("CD19", "AAAA")])
 
-    with pytest.raises(click.UsageError, match=r"(?s)--panel.*marker_id 'CD3'"):
+    with pytest.raises(click.UsageError, match=r"(?s)--panel.*sequence_1 'AAAA'"):
         load_panels((left, right))
