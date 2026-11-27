@@ -18,6 +18,10 @@ from pixelator.pna.config.panel.tables import (
     write_panel_tables,
 )
 from pixelator.pna.pixeldataset.io.pxl_file import DERIVED_OBSM_KEYS
+from pixelator.pna.pixeldataset.io.query_builder import (
+    qualified_table_name,
+    quote_identifier,
+)
 from pixelator.pna.utils import init_duckdb_conn
 
 if TYPE_CHECKING:
@@ -200,9 +204,10 @@ class PixelFileWriter:
         tables = self._connection.sql("SHOW ALL TABLES")
         adata_tables = tables.pl().filter((pl.col("name").str.starts_with("__adata__")))
         for table in adata_tables.iter_rows(named=True):
-            self._connection.sql(
-                f'DROP TABLE "{table["database"]}"."{table["schema"]}"."{table["name"]}"'
+            qualified = qualified_table_name(
+                table["database"], table["name"], table["schema"]
             )
+            self._connection.sql(f"DROP TABLE {qualified}")
 
     def write_adata(self, adata: AnnData) -> None:
         """Write the AnnData object to the PXL file.
@@ -255,9 +260,10 @@ class PixelFileWriter:
             if key in DERIVED_OBSM_KEYS:
                 continue
             obsm_layer = adata.obsm[key].reset_index(names="index")
+            table = quote_identifier(f"__adata__obsm_{key}")
             self._connection.sql(
                 f"""
-                CREATE TABLE __adata__obsm_{key} AS SELECT * FROM obsm_layer;
+                CREATE TABLE {table} AS SELECT * FROM obsm_layer;
                 """,
             )
 
