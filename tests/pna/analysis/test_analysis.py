@@ -14,7 +14,6 @@ from pandas.testing import assert_frame_equal
 from scipy.stats import mannwhitneyu
 
 from pixelator.pna.analysis.analysis import ProximityAnalysis
-from pixelator.pna.analysis.permute import edgelist_permutations
 from pixelator.pna.analysis.proximity import (
     calculate_differential_proximity,
     jcs_with_analytical_stats_from_edgelist,
@@ -128,8 +127,26 @@ def _random_edgelist(seed: int = 7) -> pl.DataFrame:
     )
 
 
+def _edge_label_permutations(edgelist: pl.DataFrame, n: int, random_seed: int):
+    """Yield edgelists where marker_1 and marker_2 are independently shuffled over edges."""
+    rng = np.random.default_rng(random_seed)
+    marker_1 = edgelist["marker_1"].to_numpy()
+    marker_2 = edgelist["marker_2"].to_numpy()
+    for _ in range(n):
+        yield pl.DataFrame(
+            {
+                "marker_1": rng.permutation(marker_1),
+                "marker_2": rng.permutation(marker_2),
+            }
+        )
+
+
 def test_analytical_proximity_stats_match_permutations():
-    """Verify that the analytical expectations match the marker permutation null."""
+    """Verify that the analytical expectations match the edge-level permutation null.
+
+    Under this null the marker_1 and marker_2 labels are independently shuffled
+    across the edges.
+    """
     edgelist = _random_edgelist()
     result = jcs_with_analytical_stats_from_edgelist(edgelist).set_index(
         ["marker_1", "marker_2"]
@@ -146,7 +163,7 @@ def test_analytical_proximity_stats_match_permutations():
         .with_columns(perm_idx=pl.lit(idx))
         .to_pandas()
         for idx, perm in enumerate(
-            edgelist_permutations(edgelist, n=n_permutations, random_seed=1)
+            _edge_label_permutations(edgelist, n=n_permutations, random_seed=1)
         )
     )
     permuted_join_counts = (
