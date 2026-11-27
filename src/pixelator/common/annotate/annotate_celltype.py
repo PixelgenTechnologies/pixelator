@@ -174,8 +174,10 @@ def _scanpy_annotation(query, reference, groups, min_prediction_score):
     sc.tl.pca(reference, svd_solver="arpack")
 
     X_ref_pca = reference.obsm["X_pca"]
+    pcs = reference.varm["PCs"]
+    ref_mean = np.asarray(reference.X.mean(axis=0)).ravel()
 
-    X_query_pca = query.X.dot(reference.varm["PCs"])
+    X_query_pca = np.asarray(query.X.dot(pcs)) - ref_mean.dot(pcs)
 
     for group in groups:
         logger.debug(f"Transferring labels for '{group}'.")
