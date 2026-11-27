@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.33.0](https://github.com/PixelgenTechnologies/pixelator/compare/v0.32.1...v0.33.0) (2026-11-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* switch to using marker edge frequencies for calculating expected jcounts ([#539](https://github.com/PixelgenTechnologies/pixelator/issues/539))
+* drop support for Python 3.11 ([#547](https://github.com/PixelgenTechnologies/pixelator/issues/547))
+
+### Features
+
+* Bump pixelator-core to 2.0.0 ([#551](https://github.com/PixelgenTechnologies/pixelator/issues/551)) ([4276b84](https://github.com/PixelgenTechnologies/pixelator/commit/4276b840c9647b08a8c3107fa699410359071477))
+* drop support for Python 3.11 ([#547](https://github.com/PixelgenTechnologies/pixelator/issues/547)) ([a4f9ff0](https://github.com/PixelgenTechnologies/pixelator/commit/a4f9ff05c3be866c01b297c76252c03d12f654ff))
+* improve graph diagnostic logs ([#559](https://github.com/PixelgenTechnologies/pixelator/issues/559)) ([7d6cf70](https://github.com/PixelgenTechnologies/pixelator/commit/7d6cf70f056582437acbd905ded2fa8c67049492))
+* remove deprecated amplicon, demux, collapse and combine-collapse ([#546](https://github.com/PixelgenTechnologies/pixelator/issues/546)) ([6de341a](https://github.com/PixelgenTechnologies/pixelator/commit/6de341a945665c309f19688eb823902d364d36fd))
+* support Python 3.14 and use it as the container runtime ([#549](https://github.com/PixelgenTechnologies/pixelator/issues/549)) ([be051da](https://github.com/PixelgenTechnologies/pixelator/commit/be051dad4a62da7bc932e9008de000817b81db51))
+* switch to using marker edge frequencies for calculating expected jcounts ([#539](https://github.com/PixelgenTechnologies/pixelator/issues/539)) ([7417396](https://github.com/PixelgenTechnologies/pixelator/commit/74173960b56f1669c44a47c044782b3d66de5b36))
+
+
+### Bug Fixes
+
+* **pna:** compute clr and log1p from X on read instead of storing them ([#556](https://github.com/PixelgenTechnologies/pixelator/issues/556)) ([2697e84](https://github.com/PixelgenTechnologies/pixelator/commit/2697e8443411e59da534eea2a7a478a6ea6bfd9c))
+* **pna:** drop marker sequence columns from graph output ([#555](https://github.com/PixelgenTechnologies/pixelator/issues/555)) ([ff2e20d](https://github.com/PixelgenTechnologies/pixelator/commit/ff2e20d3c04743b7b3c696f0df0d8e8f2803ba00))
+* prefer TMPDIR over /tmp for DuckDB spill ([#553](https://github.com/PixelgenTechnologies/pixelator/issues/553)) ([45a47c4](https://github.com/PixelgenTechnologies/pixelator/commit/45a47c43ec074c3f8ff9159064a2b3a2e00d49c9))
+
 ## [0.32.1](https://github.com/PixelgenTechnologies/pixelator/compare/v0.32.0...v0.32.1) (2026-11-16)
 
 
