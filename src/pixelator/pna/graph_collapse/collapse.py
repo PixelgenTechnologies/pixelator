@@ -23,6 +23,7 @@ from pixelator.pna.anndata import pna_edgelist_to_anndata
 from pixelator.pna.config.panel import PNAAntibodyPanel
 from pixelator.pna.pixeldataset import read
 from pixelator.pna.pixeldataset.io import PixelFileWriter, PxlFile
+from pixelator.pna.pixeldataset.io.query_builder import quote_identifier
 from pixelator.pna.utils import init_duckdb_conn
 from pixelator.pna.utils.two_bit_encoding import unpack_2bits
 
@@ -129,6 +130,9 @@ def collapse_identical_edges(con: duckdb.DuckDBPyConnection) -> None:
     identity, so two rows with the same UMIs and a different marker stay
     separate, as do the same UMIs in a different component.
 
+    Column names come from the input file, so each one is quoted as an
+    identifier before it is placed in the statement.
+
     Args:
         con: Connection with an ``edgelist`` table.
 
@@ -137,14 +141,17 @@ def collapse_identical_edges(con: duckdb.DuckDBPyConnection) -> None:
     count_columns = [column for column in _COUNT_COLUMNS if column in columns]
     group_columns = [column for column in columns if column not in count_columns]
     select_sql = ", ".join(
-        f"SUM({column}) AS {column}" if column in count_columns else column
+        f"SUM({quote_identifier(column)}) AS {quote_identifier(column)}"
+        if column in count_columns
+        else quote_identifier(column)
         for column in columns
     )
+    group_sql = ", ".join(quote_identifier(column) for column in group_columns)
     con.execute(f"""
         CREATE OR REPLACE TABLE edgelist AS
         SELECT {select_sql}
         FROM edgelist
-        GROUP BY {", ".join(group_columns)}
+        GROUP BY {group_sql}
         ORDER BY component
     """)
 
