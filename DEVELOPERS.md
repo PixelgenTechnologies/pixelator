@@ -7,6 +7,7 @@ This document covers how to get up and running with developing pixelator.
 -   [Setup the developer environment](#setup-the-developer-environment)
 -   [Pixelator developer tools](#pixelator-developer-tools)
 -   [Adding new dependencies](#adding-new-dependencies)
+-   [Adding a panel](#adding-a-panel)
 -   [Testing pixelator](#testing-pixelator)
     -   [Pixelator unit tests](#pixelator-unit-tests)
 -   [Understanding the pixelator plugin system](#understanding-the-pixelator-plugin-system)
@@ -139,6 +140,40 @@ uv add <package>
 
 This will update `pyproject.toml` and `uv.lock` with the new dependency. Both
 these files should be committed to the repository to record the new dependency.
+
+## Adding a panel
+
+Bundled panels are the CSV files in `src/pixelator/pna/resources/panels/`.
+A CI workflow runs on every pull request that changes this directory.
+
+Two scripts in `utils/` run the checks. You can run them locally too.
+
+### Static checks
+
+`utils/check_panels_static.py` checks the metadata of every panel:
+
+```shell
+uv run python utils/check_panels_static.py
+```
+
+-   **Unique version:** no two panels can have both the same `product` and the same `version`.
+    A panel without a `product` is identified by its `name`.
+-   **File name:** the file is named `<name>.csv`, and the `product`, when set, is a prefix of it.
+    The name ends in `-v<major>.<minor>`, and the `version` starts with those numbers,
+    or it ends in `-prerelease`, which can have any `version`.
+
+### Update checks
+
+`utils/check_panels_update.py` checks every panel modified since the merge-base with a base
+branch, here the branch you will merge into:
+
+```shell
+uv run python utils/check_panels_update.py --base origin/dev
+```
+
+-   **Patch bump only:** the `version` must be greater than before, with the same major and minor.
+-   **Same sequences:** the set of `(sequence_1, sequence_2)` pairs must not change.
+    `marker_id` values may change.
 
 ## Testing pixelator
 

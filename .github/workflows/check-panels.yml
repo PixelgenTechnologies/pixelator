@@ -1,0 +1,50 @@
+#schema: https://github.com/softprops/github-actions-schemas/blob/master/workflow.json
+name: "Check panels"
+
+on:
+  pull_request:
+    paths:
+      - "src/pixelator/pna/resources/panels/**"
+      - "utils/check_panels_*.py"
+      - "utils/panel_files.py"
+      - ".github/workflows/check-panels.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  check-panels:
+    name: "Check bundled panels"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # The full history is needed to find the merge-base with the base branch.
+          fetch-depth: 0
+
+      - name: Set up Python environment
+        uses: ./.github/actions/setup-python
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          uv sync --group dev
+
+      # Fails if a panel's metadata does not match its file name or collides with
+      # another panel.
+      - name: Check panels metadata
+        run: |
+          uv run python utils/check_panels_static.py
+
+      # Fails if a panel modified in the PR changes its sequences or does not
+      # only raise its patch version.
+      - name: Check panel updates
+        run: |
+          uv run python utils/check_panels_update.py --base "origin/${{ github.base_ref }}"
