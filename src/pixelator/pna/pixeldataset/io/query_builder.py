@@ -8,14 +8,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Mapping, Sized
 
+from pixelator.common.duckdb_utils import qualified_name, quote_identifier
 from pixelator.pna.analysis.analytical_proximity_query_helper import (
     jcs_with_analytical_stats,
 )
-
-
-def quote_identifier(name: str) -> str:
-    """Return ``name`` as a quoted SQL identifier."""
-    return '"' + name.replace('"', '""') + '"'
 
 
 def marker_rename_expression(column: str, renames: Mapping[str, str]) -> str:
@@ -156,10 +152,15 @@ class QueryBuilder:
             params=self._normalize_list_param("markers", markers),
         )
 
-    def table_columns_query(self, table: str) -> Query:
-        """Build a query listing the column names of a table, as ``column_name``."""
+    def table_columns_query(self, *table: str) -> Query:
+        """Build a query listing the column names of a table, as ``column_name``.
+
+        Args:
+            table: The parts of the table name, e.g. ``(db_name, "__adata__X")``.
+                Each part is quoted.
+        """
         return Query(
-            sql=f"SELECT column_name FROM (DESCRIBE SELECT * FROM {table})",
+            sql=f"SELECT column_name FROM (DESCRIBE SELECT * FROM {qualified_name(*table)})",
             params={},
         )
 
@@ -190,12 +191,16 @@ class QueryBuilder:
         table_name: str,
         components: list[str] | None = None,
         column_renames: Mapping[str, str] | None = None,
+        schema: str = "main",
     ) -> Query:
         """Build AnnData obsm query for a given obsm table in a sample DB.
 
+        ``table_name`` and ``schema`` are single, unquoted names, as listed in
+        the catalog. They are quoted here.
+
         ``column_renames`` is ``stored column -> new column``, see :meth:`adata_X_query`.
         """
-        qualified = table_name if "." in table_name else f"{db_name}.main.{table_name}"
+        qualified = qualified_name(db_name, schema, table_name)
         return Query(
             sql=f"""SELECT *{_rename_columns(column_renames)} FROM {qualified}
                     WHERE {self._optimized_where_condition("index", "components", components)}

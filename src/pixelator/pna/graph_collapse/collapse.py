@@ -19,6 +19,7 @@ from pathlib import Path
 
 import duckdb
 
+from pixelator.common.duckdb_utils import quote_identifier
 from pixelator.pna.anndata import pna_edgelist_to_anndata
 from pixelator.pna.config.panel import PNAAntibodyPanel
 from pixelator.pna.pixeldataset import read
@@ -135,9 +136,13 @@ def collapse_identical_edges(con: duckdb.DuckDBPyConnection) -> None:
     """
     columns = [row[0] for row in con.execute("DESCRIBE edgelist").fetchall()]
     count_columns = [column for column in _COUNT_COLUMNS if column in columns]
-    group_columns = [column for column in columns if column not in count_columns]
+    group_columns = [
+        quote_identifier(column) for column in columns if column not in count_columns
+    ]
     select_sql = ", ".join(
-        f"SUM({column}) AS {column}" if column in count_columns else column
+        f"SUM({quote_identifier(column)}) AS {quote_identifier(column)}"
+        if column in count_columns
+        else quote_identifier(column)
         for column in columns
     )
     con.execute(f"""
